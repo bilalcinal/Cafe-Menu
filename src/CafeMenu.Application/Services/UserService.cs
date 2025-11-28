@@ -17,9 +17,9 @@ public class UserService : IUserService
         return await _userRepository.ValidateUserPasswordAsync(userName, password, tenantId, cancellationToken);
     }
 
-    public async Task<int> CreateUserAsync(string name, string surname, string userName, string password, int tenantId, CancellationToken cancellationToken = default)
+    public async Task<int> CreateUserAsync(string name, string surname, string userName, string password, int tenantId, int roleId, CancellationToken cancellationToken = default)
     {
-        return await _userRepository.CreateUserWithHashAsync(name, surname, userName, password, tenantId, cancellationToken);
+        return await _userRepository.CreateUserWithHashAsync(name, surname, userName, password, tenantId, roleId, cancellationToken);
     }
 }
 

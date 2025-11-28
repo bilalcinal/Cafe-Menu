@@ -34,10 +34,14 @@ builder.Services.AddScoped<IPropertyRepository, EfPropertyRepository>();
 builder.Services.AddScoped<IProductPropertyRepository, EfProductPropertyRepository>();
 builder.Services.AddScoped<IUserRepository, EfUserRepository>();
 builder.Services.AddScoped<ITenantRepository, EfTenantRepository>();
+builder.Services.AddScoped<IRoleRepository, EfRoleRepository>();
+builder.Services.AddScoped<IPermissionRepository, EfPermissionRepository>();
+builder.Services.AddScoped<IRolePermissionRepository, EfRolePermissionRepository>();
 
 builder.Services.AddScoped<IProductCacheService, ProductCacheService>();
 builder.Services.AddScoped<ITenantResolver, TenantResolver>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IPermissionService, PermissionService>();
 
 builder.Services.AddScoped<CustomerMenuService>();
 builder.Services.AddScoped<CategoryService>();
@@ -46,6 +50,7 @@ builder.Services.AddScoped<PropertyService>();
 builder.Services.AddScoped<DashboardService>();
 builder.Services.AddScoped<TenantService>();
 builder.Services.AddScoped<UserManagementService>();
+builder.Services.AddScoped<RoleManagementService>();
 
 builder.Services.AddHttpContextAccessor();
 

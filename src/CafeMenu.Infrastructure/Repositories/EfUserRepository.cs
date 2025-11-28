@@ -28,18 +28,19 @@ public class EfUserRepository : IUserRepository
             .FirstOrDefaultAsync(u => u.UserId == userId && u.TenantId == tenantId, cancellationToken);
     }
 
-    public async Task<int> CreateUserWithHashAsync(string name, string surname, string userName, string plainPassword, int tenantId, CancellationToken cancellationToken = default)
+    public async Task<int> CreateUserWithHashAsync(string name, string surname, string userName, string plainPassword, int tenantId, int roleId, CancellationToken cancellationToken = default)
     {
         var nameParam = new SqlParameter("@Name", name);
         var surnameParam = new SqlParameter("@Surname", surname);
         var userNameParam = new SqlParameter("@UserName", userName);
         var plainPasswordParam = new SqlParameter("@PlainPassword", plainPassword);
         var tenantIdParam = new SqlParameter("@TenantId", tenantId);
+        var roleIdParam = new SqlParameter("@RoleId", roleId);
         var userIdParam = new SqlParameter("@UserId", System.Data.SqlDbType.Int) { Direction = System.Data.ParameterDirection.Output };
 
         await _context.Database.ExecuteSqlRawAsync(
-            "EXEC sp_CreateUser @Name, @Surname, @UserName, @PlainPassword, @TenantId, @UserId OUTPUT",
-            nameParam, surnameParam, userNameParam, plainPasswordParam, tenantIdParam, userIdParam);
+            "EXEC sp_CreateUser @Name, @Surname, @UserName, @PlainPassword, @TenantId, @RoleId, @UserId OUTPUT",
+            nameParam, surnameParam, userNameParam, plainPasswordParam, tenantIdParam, roleIdParam, userIdParam);
 
         return (int)userIdParam.Value!;
     }

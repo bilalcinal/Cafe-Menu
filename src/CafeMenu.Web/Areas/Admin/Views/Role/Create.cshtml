@@ -1,0 +1,71 @@
+@model CafeMenu.Application.Models.ViewModels.RoleViewModel
+@{
+    ViewData["Title"] = "Yeni Rol";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Yeni Rol</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb breadcrumb-custom">
+                <li class="breadcrumb-item"><a href="/Admin/Dashboard">Admin</a></li>
+                <li class="breadcrumb-item"><a href="/Admin/Role">Roller</a></li>
+                <li class="breadcrumb-item active">Yeni</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="content-card">
+    <form asp-area="Admin" asp-controller="Role" asp-action="Create" method="post" class="form-modern">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
+
+        @if (Model.AvailableTenants.Count > 1)
+        {
+            <div class="mb-4">
+                <label asp-for="TenantId" class="form-label"></label>
+                <select asp-for="TenantId" class="form-select" id="tenantSelect">
+                    <option value="">Tenant Seçin</option>
+                    @foreach (var tenant in Model.AvailableTenants)
+                    {
+                        <option value="@tenant.TenantId">@tenant.Name</option>
+                    }
+                </select>
+                <span asp-validation-for="TenantId" class="text-danger"></span>
+            </div>
+        }
+        else
+        {
+            <input type="hidden" asp-for="TenantId" />
+        }
+
+        <div class="mb-4">
+            <label asp-for="Name" class="form-label"></label>
+            <input asp-for="Name" class="form-control" placeholder="Rol adını girin" />
+            <span asp-validation-for="Name" class="text-danger"></span>
+        </div>
+
+        <div class="mb-4">
+            <div class="form-check form-switch">
+                <input asp-for="IsActive" class="form-check-input" type="checkbox" />
+                <label asp-for="IsActive" class="form-check-label"></label>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2 justify-content-end">
+            <a asp-area="Admin" asp-controller="Role" asp-action="Index" class="btn btn-modern btn-secondary">
+                <i class="bi bi-x-circle me-2"></i>İptal
+            </a>
+            <button type="submit" class="btn btn-modern btn-modern-primary">
+                <i class="bi bi-check-circle me-2"></i>Kaydet
+            </button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
+

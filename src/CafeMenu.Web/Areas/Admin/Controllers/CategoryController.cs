@@ -1,5 +1,6 @@
 using CafeMenu.Application.Services;
 using CafeMenu.Application.Models.ViewModels;
+using CafeMenu.Web.Attributes;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -16,6 +17,7 @@ public class CategoryController : Controller
         _categoryService = categoryService;
     }
 
+    [RequirePermission("Category.View")]
     public async Task<IActionResult> Index(CancellationToken cancellationToken = default)
     {
         var categories = await _categoryService.GetAllAsync(cancellationToken);
@@ -23,6 +25,7 @@ public class CategoryController : Controller
     }
 
     [HttpGet]
+    [RequirePermission("Category.Create")]
     public async Task<IActionResult> Create(CancellationToken cancellationToken = default)
     {
         var viewModel = new CategoryViewModel
@@ -47,6 +50,7 @@ public class CategoryController : Controller
     }
 
     [HttpGet]
+    [RequirePermission("Category.Edit")]
     public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken = default)
     {
         var viewModel = await _categoryService.GetByIdAsync(id, cancellationToken);
@@ -82,6 +86,7 @@ public class CategoryController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [RequirePermission("Category.Delete")]
     public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken = default)
     {
         await _categoryService.DeleteAsync(id, cancellationToken);

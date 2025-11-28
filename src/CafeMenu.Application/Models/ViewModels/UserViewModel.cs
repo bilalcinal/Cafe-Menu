@@ -25,6 +25,10 @@ public class UserViewModel
     [Required(ErrorMessage = "Tenant seçimi gereklidir")]
     public int TenantId { get; set; }
 
+    [Required(ErrorMessage = "Rol seçimi gereklidir")]
+    public int RoleId { get; set; }
+
     public List<TenantDto> AvailableTenants { get; set; } = new();
+    public List<RoleDto> AvailableRoles { get; set; } = new();
 }
 

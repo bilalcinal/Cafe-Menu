@@ -1,0 +1,113 @@
+@model IReadOnlyList<CafeMenu.Application.Models.RoleDto>
+@{
+    ViewData["Title"] = "Roller";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Roller</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb breadcrumb-custom">
+                <li class="breadcrumb-item"><a href="/Admin/Dashboard">Admin</a></li>
+                <li class="breadcrumb-item active">Roller</li>
+            </ol>
+        </nav>
+    </div>
+    <a asp-area="Admin" asp-controller="Role" asp-action="Create" class="btn btn-modern btn-modern-primary">
+        <i class="bi bi-plus-circle me-2"></i>Yeni Rol
+    </a>
+</div>
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="content-card">
+    @if (Model.Any())
+    {
+        <div class="table-responsive">
+            <table class="table table-modern">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Rol Adı</th>
+                        <th>Tenant</th>
+                        <th>Durum</th>
+                        <th>Kullanıcı Sayısı</th>
+                        <th>Oluşturulma</th>
+                        <th class="text-end">İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var role in Model)
+                    {
+                        <tr>
+                            <td><span class="badge bg-secondary">@role.RoleId</span></td>
+                            <td>
+                                <i class="bi bi-shield-check me-2 text-primary"></i>@role.Name
+                                @if (role.IsSystem)
+                                {
+                                    <span class="badge bg-warning text-dark ms-2">Sistem</span>
+                                }
+                            </td>
+                            <td>@role.TenantName</td>
+                            <td>
+                                @if (role.IsActive)
+                                {
+                                    <span class="badge bg-success">Aktif</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Pasif</span>
+                                }
+                            </td>
+                            <td>@role.UserCount</td>
+                            <td>@role.CreatedDate.ToString("dd.MM.yyyy HH:mm")</td>
+                            <td class="text-end">
+                                <div class="d-flex justify-content-end gap-2">
+                                    <a asp-area="Admin" asp-controller="Role" asp-action="Permissions" asp-route-id="@role.RoleId" 
+                                       class="btn btn-sm btn-outline-info" title="İzinleri Yönet">
+                                        <i class="bi bi-key"></i>
+                                    </a>
+                                    @if (!role.IsSystem)
+                                    {
+                                        <a asp-area="Admin" asp-controller="Role" asp-action="Edit" asp-route-id="@role.RoleId" 
+                                           class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <form asp-area="Admin" asp-controller="Role" asp-action="Delete" asp-route-id="@role.RoleId" method="post">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" 
+                                                    onclick="return confirm('Bu rolü silmek istediğinize emin misiniz?');">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <i class="bi bi-shield-x"></i>
+            </div>
+            <h4>Rol bulunamadı</h4>
+            <p class="text-muted">Henüz rol eklenmemiş.</p>
+            <a asp-area="Admin" asp-controller="Role" asp-action="Create" class="btn btn-modern btn-modern-primary mt-3">
+                <i class="bi bi-plus-circle me-2"></i>İlk Rolü Ekle
+            </a>
+        </div>
+    }
+</div>
+

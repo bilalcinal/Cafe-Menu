@@ -44,6 +44,15 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .HasColumnName("TENANTID")
             .IsRequired();
 
+        builder.Property(u => u.RoleId)
+            .HasColumnName("ROLEID")
+            .IsRequired();
+
+        builder.HasOne(u => u.Role)
+            .WithMany(r => r.Users)
+            .HasForeignKey(u => u.RoleId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.Property(u => u.IsDeleted)
             .HasColumnName("IsDeleted")
             .HasDefaultValue(false)

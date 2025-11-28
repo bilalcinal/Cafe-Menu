@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
 namespace CafeMenu.Web.Areas.Admin.Controllers;
@@ -18,17 +19,29 @@ public class AccountController : Controller
     private readonly ITenantResolver _tenantResolver;
     private readonly IUserRepository _userRepository;
     private readonly ITenantRepository _tenantRepository;
+    private readonly IRoleRepository _roleRepository;
+    private readonly IRolePermissionRepository _rolePermissionRepository;
+    private readonly IPermissionRepository _permissionRepository;
+    private readonly IPermissionService _permissionService;
 
     public AccountController(
         IUserService userService,
         ITenantResolver tenantResolver,
         IUserRepository userRepository,
-        ITenantRepository tenantRepository)
+        ITenantRepository tenantRepository,
+        IRoleRepository roleRepository,
+        IRolePermissionRepository rolePermissionRepository,
+        IPermissionRepository permissionRepository,
+        IPermissionService permissionService)
     {
         _userService = userService;
         _tenantResolver = tenantResolver;
         _userRepository = userRepository;
         _tenantRepository = tenantRepository;
+        _roleRepository = roleRepository;
+        _rolePermissionRepository = rolePermissionRepository;
+        _permissionRepository = permissionRepository;
+        _permissionService = permissionService;
     }
 
     [HttpGet]
@@ -74,12 +87,23 @@ public class AccountController : Controller
 
         var tenantId = foundTenantId.Value;
 
+        var role = await _roleRepository.GetByIdAsync(user.RoleId, tenantId, cancellationToken);
+        var roleName = role?.Name ?? string.Empty;
+
         var claims = new List<Claim>
         {
             new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
             new Claim(ClaimTypes.Name, user.UserName),
-            new Claim("TenantId", tenantId.ToString())
+            new Claim(ClaimTypes.Role, roleName),
+            new Claim("TenantId", tenantId.ToString()),
+            new Claim("RoleId", user.RoleId.ToString())
         };
+
+        var permissions = await _permissionService.GetUserPermissionsAsync(user.UserId, cancellationToken);
+        foreach (var permission in permissions)
+        {
+            claims.Add(new Claim("Permission", permission));
+        }
 
         var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
         var authProperties = new AuthenticationProperties

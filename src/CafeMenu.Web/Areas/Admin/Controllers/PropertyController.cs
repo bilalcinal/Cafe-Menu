@@ -1,5 +1,6 @@
 using CafeMenu.Application.Services;
 using CafeMenu.Application.Models.ViewModels;
+using CafeMenu.Web.Attributes;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -16,6 +17,7 @@ public class PropertyController : Controller
         _propertyService = propertyService;
     }
 
+    [RequirePermission("Property.View")]
     public async Task<IActionResult> Index(CancellationToken cancellationToken = default)
     {
         var properties = await _propertyService.GetAllAsync(cancellationToken);
@@ -23,6 +25,7 @@ public class PropertyController : Controller
     }
 
     [HttpGet]
+    [RequirePermission("Property.Create")]
     public IActionResult Create()
     {
         return View(new PropertyViewModel());
@@ -42,6 +45,7 @@ public class PropertyController : Controller
     }
 
     [HttpGet]
+    [RequirePermission("Property.Edit")]
     public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken = default)
     {
         var viewModel = await _propertyService.GetByIdAsync(id, cancellationToken);
@@ -75,6 +79,7 @@ public class PropertyController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [RequirePermission("Property.Delete")]
     public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken = default)
     {
         await _propertyService.DeleteAsync(id, cancellationToken);

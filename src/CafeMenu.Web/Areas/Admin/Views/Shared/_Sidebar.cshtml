@@ -1,3 +1,15 @@
+@using System.Security.Claims
+@{
+    var user = Context.User;
+    var role = user?.FindFirst(ClaimTypes.Role)?.Value;
+    var permissions = user?.FindAll("Permission").Select(c => c.Value).ToList() ?? new List<string>();
+    var isSuperAdmin = role == "SuperAdmin";
+    var isTenantAdmin = role == "TenantAdmin";
+    var hasCategoryView = isSuperAdmin || isTenantAdmin || permissions.Contains("Category.View");
+    var hasProductView = isSuperAdmin || isTenantAdmin || permissions.Contains("Product.View");
+    var hasPropertyView = isSuperAdmin || isTenantAdmin || permissions.Contains("Property.View");
+    var hasUserView = isSuperAdmin || isTenantAdmin || permissions.Contains("User.View");
+}
 <nav class="admin-sidebar" id="adminSidebar">
     <div class="admin-sidebar-brand">
         <h4>
@@ -12,41 +24,66 @@
                 <span>Dashboard</span>
             </a>
         </li>
-        <li class="nav-item">
-            <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Category" ? "active" : "")" 
-               href="/Admin/Category">
-                <i class="bi bi-folder"></i>
-                <span>Kategoriler</span>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Product" ? "active" : "")" 
-               href="/Admin/Product">
-                <i class="bi bi-box"></i>
-                <span>Ürünler</span>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Property" ? "active" : "")" 
-               href="/Admin/Property">
-                <i class="bi bi-tags"></i>
-                <span>Özellikler</span>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Tenant" ? "active" : "")" 
-               href="/Admin/Tenant">
-                <i class="bi bi-building"></i>
-                <span>Tenantlar</span>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "User" ? "active" : "")" 
-               href="/Admin/User">
-                <i class="bi bi-people"></i>
-                <span>Kullanıcılar</span>
-            </a>
-        </li>
+        @if (hasCategoryView)
+        {
+            <li class="nav-item">
+                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Category" ? "active" : "")" 
+                   href="/Admin/Category">
+                    <i class="bi bi-folder"></i>
+                    <span>Kategoriler</span>
+                </a>
+            </li>
+        }
+        @if (hasProductView)
+        {
+            <li class="nav-item">
+                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Product" ? "active" : "")" 
+                   href="/Admin/Product">
+                    <i class="bi bi-box"></i>
+                    <span>Ürünler</span>
+                </a>
+            </li>
+        }
+        @if (hasPropertyView)
+        {
+            <li class="nav-item">
+                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Property" ? "active" : "")" 
+                   href="/Admin/Property">
+                    <i class="bi bi-tags"></i>
+                    <span>Özellikler</span>
+                </a>
+            </li>
+        }
+        @if (isSuperAdmin)
+        {
+            <li class="nav-item">
+                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Tenant" ? "active" : "")" 
+                   href="/Admin/Tenant">
+                    <i class="bi bi-building"></i>
+                    <span>Tenantlar</span>
+                </a>
+            </li>
+        }
+        @if (isSuperAdmin || isTenantAdmin)
+        {
+            <li class="nav-item">
+                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Role" ? "active" : "")" 
+                   href="/Admin/Role">
+                    <i class="bi bi-shield-check"></i>
+                    <span>Roller</span>
+                </a>
+            </li>
+        }
+        @if (hasUserView)
+        {
+            <li class="nav-item">
+                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "User" ? "active" : "")" 
+                   href="/Admin/User">
+                    <i class="bi bi-people"></i>
+                    <span>Kullanıcılar</span>
+                </a>
+            </li>
+        }
         <li class="nav-item mt-3">
             <a class="nav-link text-danger" href="/Admin/Account/Logout" onclick="event.preventDefault(); document.getElementById('logoutForm').submit();">
                 <i class="bi bi-box-arrow-right"></i>

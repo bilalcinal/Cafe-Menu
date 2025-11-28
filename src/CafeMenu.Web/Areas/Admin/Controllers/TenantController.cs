@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace CafeMenu.Web.Areas.Admin.Controllers;
 
 [Area("Admin")]
-[Authorize]
+[Authorize(Roles = "SuperAdmin")]
 public class TenantController : Controller
 {
     private readonly TenantService _tenantService;

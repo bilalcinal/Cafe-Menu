@@ -1,0 +1,109 @@
+@model CafeMenu.Application.Models.ViewModels.RoleViewModel
+@{
+    ViewData["Title"] = "Rol İzinleri";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Rol İzinleri: @Model.Name</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb breadcrumb-custom">
+                <li class="breadcrumb-item"><a href="/Admin/Dashboard">Admin</a></li>
+                <li class="breadcrumb-item"><a href="/Admin/Role">Roller</a></li>
+                <li class="breadcrumb-item active">İzinler</li>
+            </ol>
+        </nav>
+    </div>
+    <a asp-area="Admin" asp-controller="Role" asp-action="Index" class="btn btn-modern btn-secondary">
+        <i class="bi bi-arrow-left me-2"></i>Geri
+    </a>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["InfoMessage"] != null)
+{
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+        @TempData["InfoMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="content-card">
+    <div class="mb-4">
+        <p class="text-muted">
+            <strong>Tenant:</strong> @Model.TenantName
+            @if (Model.IsSystem)
+            {
+                <span class="badge bg-warning text-dark ms-2">Sistem Rolü</span>
+            }
+        </p>
+    </div>
+
+    @if (Model.IsSystem && Model.Name == "SuperAdmin")
+    {
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle me-2"></i>SuperAdmin rolü tüm izinlere sahiptir ve düzenlenemez.
+        </div>
+    }
+    else
+    {
+        <form asp-area="Admin" asp-controller="Role" asp-action="Permissions" asp-route-id="@Model.RoleId" method="post" class="form-modern">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="RoleId" />
+            <input type="hidden" asp-for="TenantId" />
+
+            @foreach (var group in Model.AvailablePermissions.GroupBy(p => p.GroupName).OrderBy(g => g.Key))
+            {
+                <div class="permission-group mb-4">
+                    <h5 class="mb-3">
+                        <i class="bi bi-folder me-2"></i>@group.Key
+                    </h5>
+                    <div class="row">
+                        @foreach (var permission in group.OrderBy(p => p.DisplayName))
+                        {
+                            <div class="col-md-6 col-lg-4 mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" 
+                                           name="SelectedPermissionIds" 
+                                           value="@permission.PermissionId" 
+                                           id="permission_@permission.PermissionId"
+                                           @(Model.SelectedPermissionIds.Contains(permission.PermissionId) ? "checked" : "") />
+                                    <label class="form-check-label" for="permission_@permission.PermissionId">
+                                        @permission.DisplayName
+                                        <small class="text-muted d-block">@permission.Key</small>
+                                    </label>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+
+            <div class="d-flex gap-2 justify-content-end mt-4">
+                <a asp-area="Admin" asp-controller="Role" asp-action="Index" class="btn btn-modern btn-secondary">
+                    <i class="bi bi-x-circle me-2"></i>İptal
+                </a>
+                <button type="submit" class="btn btn-modern btn-modern-primary">
+                    <i class="bi bi-check-circle me-2"></i>İzinleri Kaydet
+                </button>
+            </div>
+        </form>
+    }
+</div>
+

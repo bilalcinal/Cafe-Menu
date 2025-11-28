@@ -8,5 +8,7 @@ public class User : BaseEntity
     public string UserName { get; set; } = string.Empty;
     public byte[] HashPassword { get; set; } = Array.Empty<byte>();
     public byte[] SaltPassword { get; set; } = Array.Empty<byte>();
+    public int RoleId { get; set; }
+    public Role? Role { get; set; }
 }
 
