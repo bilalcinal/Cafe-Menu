@@ -3,6 +3,7 @@ using CafeMenu.Application.Interfaces.Services;
 using CafeMenu.Application.Services;
 using CafeMenu.Infrastructure.Persistence;
 using CafeMenu.Infrastructure.Repositories;
+using CafeMenu.Infrastructure.SeedData;
 using CafeMenu.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
@@ -103,7 +104,7 @@ app.MapControllerRoute(
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<CafeMenuDbContext>();
-    await PermissionSeeder.SeedPermissionsAsync(context);
+    await CafeMenuDataSeeder.SeedAsync(context);
 }
 
 app.Run();

@@ -2,11 +2,11 @@ using CafeMenu.Domain.Entities;
 using CafeMenu.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
-namespace CafeMenu.Infrastructure.Services;
+namespace CafeMenu.Infrastructure.SeedData;
 
 public static class PermissionSeeder
 {
-    public static async Task SeedPermissionsAsync(CafeMenuDbContext context)
+    public static async Task SeedAsync(CafeMenuDbContext context)
     {
         var permissions = new List<Permission>
         {
