@@ -4,42 +4,77 @@
     Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h2>Özellikler</h2>
-    <a asp-action="Create" class="btn btn-primary">Yeni Özellik</a>
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Özellikler</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb breadcrumb-custom">
+                <li class="breadcrumb-item"><a href="/Admin/Dashboard">Admin</a></li>
+                <li class="breadcrumb-item active">Özellikler</li>
+            </ol>
+        </nav>
+    </div>
+    <a asp-action="Create" class="btn btn-modern btn-modern-primary">
+        <i class="bi bi-plus-circle me-2"></i>Yeni Özellik
+    </a>
 </div>
 
-<table class="table table-striped table-hover">
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Key</th>
-            <th>Value</th>
-            <th>İşlemler</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var property in Model)
-        {
-            <tr>
-                <td>@property.PropertyId</td>
-                <td>@property.Key</td>
-                <td>@property.Value</td>
-                <td>
-                    <a asp-action="Edit" asp-route-id="@property.PropertyId" class="btn btn-sm btn-warning">Düzenle</a>
-                    <form asp-action="Delete" asp-route-id="@property.PropertyId" method="post" class="d-inline">
-                        @Html.AntiForgeryToken()
-                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Silmek istediğinize emin misiniz?')">Sil</button>
-                    </form>
-                </td>
-            </tr>
-        }
-        @if (!Model.Any())
-        {
-            <tr>
-                <td colspan="4" class="text-center text-muted">Özellik bulunamadı</td>
-            </tr>
-        }
-    </tbody>
-</table>
-
+<div class="content-card">
+    @if (Model.Any())
+    {
+        <div class="table-responsive">
+            <table class="table table-modern">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Key</th>
+                        <th>Value</th>
+                        <th class="text-end">İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var property in Model)
+                    {
+                        <tr>
+                            <td><span class="badge bg-secondary">@property.PropertyId</span></td>
+                            <td>
+                                <span class="badge bg-info text-white px-3 py-2">
+                                    <i class="bi bi-key me-1"></i>@property.Key
+                                </span>
+                            </td>
+                            <td>@property.Value</td>
+                            <td class="text-end">
+                                <div class="btn-group" role="group">
+                                    <a asp-action="Edit" asp-route-id="@property.PropertyId" 
+                                       class="btn btn-sm btn-modern btn-outline-primary">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <form asp-action="Delete" asp-route-id="@property.PropertyId" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm btn-modern btn-modern-danger" 
+                                                onclick="return confirm('Bu özelliği silmek istediğinize emin misiniz?')">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <i class="bi bi-tags"></i>
+            </div>
+            <h4>Özellik bulunamadı</h4>
+            <p class="text-muted">Henüz özellik eklenmemiş.</p>
+            <a asp-action="Create" class="btn btn-modern btn-modern-primary mt-3">
+                <i class="bi bi-plus-circle me-2"></i>İlk Özelliği Ekle
+            </a>
+        </div>
+    }
+</div>

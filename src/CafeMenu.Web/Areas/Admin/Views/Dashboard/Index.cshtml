@@ -4,32 +4,56 @@
     Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
 }
 
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Dashboard</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb breadcrumb-custom">
+                <li class="breadcrumb-item"><a href="/Admin/Dashboard">Admin</a></li>
+                <li class="breadcrumb-item active">Dashboard</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
 <div class="row">
-    <div class="col-md-6 mb-4">
-        <div class="card shadow">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">Kategoriye Göre Ürün Sayısı</h5>
+    <div class="col-lg-6 col-md-12 mb-4">
+        <div class="dashboard-widget">
+            <div class="dashboard-widget-header">
+                <h5 class="dashboard-widget-title">
+                    <i class="bi bi-bar-chart-fill me-2 text-primary"></i>Kategoriye Göre Ürün Sayısı
+                </h5>
             </div>
-            <div class="card-body">
-                <table class="table table-striped">
+            <div class="table-responsive">
+                <table class="table table-modern">
                     <thead>
                         <tr>
                             <th>Kategori</th>
-                            <th>Ürün Sayısı</th>
+                            <th class="text-end">Ürün Sayısı</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var item in Model.ProductCountByCategory)
+                        @if (Model.ProductCountByCategory.Any())
                         {
-                            <tr>
-                                <td>@item.Key</td>
-                                <td><span class="badge bg-secondary">@item.Value</span></td>
-                            </tr>
+                            @foreach (var item in Model.ProductCountByCategory.OrderByDescending(x => x.Value))
+                            {
+                                <tr>
+                                    <td>
+                                        <i class="bi bi-folder me-2 text-primary"></i>@item.Key
+                                    </td>
+                                    <td class="text-end">
+                                        <span class="badge bg-primary rounded-pill px-3 py-2">@item.Value</span>
+                                    </td>
+                                </tr>
+                            }
                         }
-                        @if (!Model.ProductCountByCategory.Any())
+                        else
                         {
                             <tr>
-                                <td colspan="2" class="text-center text-muted">Veri bulunamadı</td>
+                                <td colspan="2" class="text-center text-muted py-4">
+                                    <i class="bi bi-inbox d-block mb-2" style="font-size: 2rem;"></i>
+                                    Veri bulunamadı
+                                </td>
                             </tr>
                         }
                     </tbody>
@@ -38,25 +62,41 @@
         </div>
     </div>
 
-    <div class="col-md-6 mb-4">
-        <div class="card shadow">
-            <div class="card-header bg-success text-white">
-                <h5 class="mb-0">Döviz Kurları</h5>
+    <div class="col-lg-6 col-md-12 mb-4">
+        <div class="dashboard-widget">
+            <div class="dashboard-widget-header">
+                <h5 class="dashboard-widget-title">
+                    <i class="bi bi-currency-exchange me-2 text-success"></i>Döviz Kurları
+                </h5>
+                <span class="badge bg-success" id="currencyStatus">
+                    <i class="bi bi-check-circle me-1"></i>Aktif
+                </span>
             </div>
-            <div class="card-body">
-                <div id="currencyRates">
-                    <div class="mb-2">
-                        <strong>TRY:</strong> <span id="tryRate">@Model.CurrencyRates.TryRate.ToString("N4")</span>
+            <div class="currency-widget">
+                <div class="currency-item">
+                    <div>
+                        <div class="currency-label">TRY (Türk Lirası)</div>
+                        <div class="text-muted small">Base Currency</div>
                     </div>
-                    <div class="mb-2">
-                        <strong>USD:</strong> <span id="usdRate">@Model.CurrencyRates.UsdRate.ToString("N4")</span>
+                    <div class="currency-value">@Model.CurrencyRates.TryRate.ToString("N4")</div>
+                </div>
+                <div class="currency-item">
+                    <div>
+                        <div class="currency-label">USD (Amerikan Doları)</div>
+                        <div class="text-muted small">US Dollar</div>
                     </div>
-                    <div class="mb-2">
-                        <strong>EUR:</strong> <span id="eurRate">@Model.CurrencyRates.EurRate.ToString("N4")</span>
+                    <div class="currency-value" id="usdRate">@Model.CurrencyRates.UsdRate.ToString("N4")</div>
+                </div>
+                <div class="currency-item">
+                    <div>
+                        <div class="currency-label">EUR (Euro)</div>
+                        <div class="text-muted small">Euro</div>
                     </div>
-                    <div class="text-muted small">
-                        Son Güncelleme: <span id="lastUpdated">@Model.CurrencyRates.LastUpdated.ToString("HH:mm:ss")</span>
-                    </div>
+                    <div class="currency-value" id="eurRate">@Model.CurrencyRates.EurRate.ToString("N4")</div>
+                </div>
+                <div class="currency-update">
+                    <i class="bi bi-clock me-1"></i>
+                    Son Güncelleme: <span id="lastUpdated">@Model.CurrencyRates.LastUpdated.ToString("HH:mm:ss")</span>
                 </div>
             </div>
         </div>
@@ -65,18 +105,33 @@
 
 @section Scripts {
     <script>
-        setInterval(function() {
+        let currencyUpdateInterval;
+
+        function updateCurrencyRates() {
             fetch('/Admin/Dashboard/GetRates')
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    return response.json();
+                })
                 .then(data => {
-                    document.getElementById('tryRate').textContent = parseFloat(data.tryRate).toFixed(4);
                     document.getElementById('usdRate').textContent = parseFloat(data.usdRate).toFixed(4);
                     document.getElementById('eurRate').textContent = parseFloat(data.eurRate).toFixed(4);
                     const lastUpdated = new Date(data.lastUpdated);
                     document.getElementById('lastUpdated').textContent = lastUpdated.toLocaleTimeString('tr-TR');
+                    document.getElementById('currencyStatus').innerHTML = '<i class="bi bi-check-circle me-1"></i>Aktif';
                 })
-                .catch(error => console.error('Kur bilgisi alınamadı:', error));
-        }, 10000);
+                .catch(error => {
+                    console.error('Kur bilgisi alınamadı:', error);
+                    document.getElementById('currencyStatus').innerHTML = '<i class="bi bi-x-circle me-1"></i>Hata';
+                });
+        }
+
+        currencyUpdateInterval = setInterval(updateCurrencyRates, 10000);
+
+        window.addEventListener('beforeunload', function() {
+            if (currencyUpdateInterval) {
+                clearInterval(currencyUpdateInterval);
+            }
+        });
     </script>
 }
-

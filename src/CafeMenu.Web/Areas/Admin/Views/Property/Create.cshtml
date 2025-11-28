@@ -4,29 +4,49 @@
     Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
 }
 
-<h2>Yeni Özellik</h2>
-
-<form asp-action="Create" method="post">
-    @Html.AntiForgeryToken()
-    <div asp-validation-summary="All" class="text-danger"></div>
-
-    <div class="mb-3">
-        <label asp-for="Key" class="form-label"></label>
-        <input asp-for="Key" class="form-control" />
-        <span asp-validation-for="Key" class="text-danger"></span>
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Yeni Özellik</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb breadcrumb-custom">
+                <li class="breadcrumb-item"><a href="/Admin/Dashboard">Admin</a></li>
+                <li class="breadcrumb-item"><a href="/Admin/Property">Özellikler</a></li>
+                <li class="breadcrumb-item active">Yeni</li>
+            </ol>
+        </nav>
     </div>
+</div>
 
-    <div class="mb-3">
-        <label asp-for="Value" class="form-label"></label>
-        <input asp-for="Value" class="form-control" />
-        <span asp-validation-for="Value" class="text-danger"></span>
-    </div>
+<div class="content-card">
+    <form asp-action="Create" method="post" class="form-modern">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
 
-    <button type="submit" class="btn btn-primary">Kaydet</button>
-    <a asp-action="Index" class="btn btn-secondary">İptal</a>
-</form>
+        <div class="mb-4">
+            <label asp-for="Key" class="form-label"></label>
+            <input asp-for="Key" class="form-control" placeholder="Özellik anahtarı (örn: Boyut, Şeker)" />
+            <small class="text-muted">Özelliğin anahtar adı (örn: Boyut, Şeker, Süt)</small>
+            <span asp-validation-for="Key" class="text-danger"></span>
+        </div>
+
+        <div class="mb-4">
+            <label asp-for="Value" class="form-label"></label>
+            <input asp-for="Value" class="form-control" placeholder="Özellik değeri (örn: Büyük, Az, Tam Yağlı)" />
+            <small class="text-muted">Özelliğin değeri (örn: Büyük, Az, Tam Yağlı)</small>
+            <span asp-validation-for="Value" class="text-danger"></span>
+        </div>
+
+        <div class="d-flex gap-2 justify-content-end">
+            <a asp-action="Index" class="btn btn-modern btn-secondary">
+                <i class="bi bi-x-circle me-2"></i>İptal
+            </a>
+            <button type="submit" class="btn btn-modern btn-modern-primary">
+                <i class="bi bi-check-circle me-2"></i>Kaydet
+            </button>
+        </div>
+    </form>
+</div>
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
 }
-

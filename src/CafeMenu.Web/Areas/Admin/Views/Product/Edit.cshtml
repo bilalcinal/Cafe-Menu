@@ -4,60 +4,108 @@
     Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
 }
 
-<h2>Ürün Düzenle</h2>
-
-<form asp-action="Edit" method="post">
-    @Html.AntiForgeryToken()
-    <input type="hidden" asp-for="ProductId" />
-    <div asp-validation-summary="All" class="text-danger"></div>
-
-    <div class="mb-3">
-        <label asp-for="ProductName" class="form-label"></label>
-        <input asp-for="ProductName" class="form-control" />
-        <span asp-validation-for="ProductName" class="text-danger"></span>
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Ürün Düzenle</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb breadcrumb-custom">
+                <li class="breadcrumb-item"><a href="/Admin/Dashboard">Admin</a></li>
+                <li class="breadcrumb-item"><a href="/Admin/Product">Ürünler</a></li>
+                <li class="breadcrumb-item active">Düzenle</li>
+            </ol>
+        </nav>
     </div>
+</div>
 
-    <div class="mb-3">
-        <label asp-for="CategoryId" class="form-label"></label>
-        <select asp-for="CategoryId" class="form-select" asp-items="@(new SelectList(Model.AvailableCategories, "CategoryId", "CategoryName"))">
-            <option value="">Kategori Seçiniz</option>
-        </select>
-        <span asp-validation-for="CategoryId" class="text-danger"></span>
-    </div>
+<div class="content-card">
+    <form asp-action="Edit" method="post" class="form-modern">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="ProductId" />
+        <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
 
-    <div class="mb-3">
-        <label asp-for="Price" class="form-label"></label>
-        <input asp-for="Price" class="form-control" type="number" step="0.01" />
-        <span asp-validation-for="Price" class="text-danger"></span>
-    </div>
-
-    <div class="mb-3">
-        <label asp-for="ImagePath" class="form-label"></label>
-        <input asp-for="ImagePath" class="form-control" />
-        <span asp-validation-for="ImagePath" class="text-danger"></span>
-    </div>
-
-    <div class="mb-3">
-        <label class="form-label">Özellikler</label>
-        <div class="border p-3">
-            @foreach (var property in Model.AvailableProperties)
-            {
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" name="SelectedPropertyIds" value="@property.PropertyId" id="prop_@property.PropertyId" 
-                           @(Model.SelectedPropertyIds.Contains(property.PropertyId) ? "checked" : "") />
-                    <label class="form-check-label" for="prop_@property.PropertyId">
-                        @property.Key: @property.Value
-                    </label>
+        <div class="row">
+            <div class="col-md-8">
+                <div class="mb-4">
+                    <label asp-for="ProductName" class="form-label"></label>
+                    <input asp-for="ProductName" class="form-control" placeholder="Ürün adını girin" />
+                    <span asp-validation-for="ProductName" class="text-danger"></span>
                 </div>
-            }
-        </div>
-    </div>
 
-    <button type="submit" class="btn btn-primary">Kaydet</button>
-    <a asp-action="Index" class="btn btn-secondary">İptal</a>
-</form>
+                <div class="mb-4">
+                    <label asp-for="CategoryId" class="form-label"></label>
+                    <select asp-for="CategoryId" class="form-select" asp-items="@(new SelectList(Model.AvailableCategories, "CategoryId", "CategoryName"))">
+                        <option value="">Kategori Seçiniz</option>
+                    </select>
+                    <span asp-validation-for="CategoryId" class="text-danger"></span>
+                </div>
+
+                <div class="mb-4">
+                    <label asp-for="Price" class="form-label"></label>
+                    <div class="input-group">
+                        <input asp-for="Price" class="form-control" type="number" step="0.01" placeholder="0.00" />
+                        <span class="input-group-text">₺</span>
+                    </div>
+                    <span asp-validation-for="Price" class="text-danger"></span>
+                </div>
+
+                <div class="mb-4">
+                    <label asp-for="ImagePath" class="form-label">Resim URL</label>
+                    <input asp-for="ImagePath" class="form-control" placeholder="https://example.com/image.jpg" />
+                    @if (!string.IsNullOrEmpty(Model.ImagePath))
+                    {
+                        <div class="mt-2">
+                            <img src="@Model.ImagePath" alt="Preview" class="img-thumbnail" style="max-height: 150px;" />
+                        </div>
+                    }
+                    <small class="text-muted">Ürün resminin URL adresini girin</small>
+                    <span asp-validation-for="ImagePath" class="text-danger"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <label class="form-label">Özellikler</label>
+            <div class="border rounded p-3 bg-light">
+                @if (Model.AvailableProperties.Any())
+                {
+                    <div class="row">
+                        @foreach (var property in Model.AvailableProperties)
+                        {
+                            <div class="col-md-6 mb-2">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="SelectedPropertyIds" 
+                                           value="@property.PropertyId" id="prop_@property.PropertyId" 
+                                           @(Model.SelectedPropertyIds.Contains(property.PropertyId) ? "checked" : "") />
+                                    <label class="form-check-label" for="prop_@property.PropertyId">
+                                        <strong>@property.Key:</strong> @property.Value
+                                    </label>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted mb-0">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Henüz özellik tanımlanmamış. 
+                        <a href="/Admin/Property/Create" target="_blank">Yeni özellik ekle</a>
+                    </p>
+                }
+            </div>
+        </div>
+
+        <div class="d-flex gap-2 justify-content-end">
+            <a asp-action="Index" class="btn btn-modern btn-secondary">
+                <i class="bi bi-x-circle me-2"></i>İptal
+            </a>
+            <button type="submit" class="btn btn-modern btn-modern-primary">
+                <i class="bi bi-check-circle me-2"></i>Kaydet
+            </button>
+        </div>
+    </form>
+</div>
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
 }
-

@@ -1,0 +1,47 @@
+<nav class="admin-sidebar" id="adminSidebar">
+    <div class="admin-sidebar-brand">
+        <h4>
+            <i class="bi bi-speedometer2 me-2"></i>Cafe Admin
+        </h4>
+    </div>
+    <ul class="admin-sidebar-nav list-unstyled">
+        <li class="nav-item">
+            <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Dashboard" ? "active" : "")" 
+               href="/Admin/Dashboard">
+                <i class="bi bi-speedometer2"></i>
+                <span>Dashboard</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Category" ? "active" : "")" 
+               href="/Admin/Category">
+                <i class="bi bi-folder"></i>
+                <span>Kategoriler</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Product" ? "active" : "")" 
+               href="/Admin/Product">
+                <i class="bi bi-box"></i>
+                <span>Ürünler</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Property" ? "active" : "")" 
+               href="/Admin/Property">
+                <i class="bi bi-tags"></i>
+                <span>Özellikler</span>
+            </a>
+        </li>
+        <li class="nav-item mt-3">
+            <a class="nav-link text-danger" href="/Admin/Account/Logout" onclick="event.preventDefault(); document.getElementById('logoutForm').submit();">
+                <i class="bi bi-box-arrow-right"></i>
+                <span>Çıkış</span>
+            </a>
+            <form id="logoutForm" method="post" action="/Admin/Account/Logout" style="display: none;">
+                @Html.AntiForgeryToken()
+            </form>
+        </li>
+    </ul>
+</nav>
+

@@ -4,34 +4,52 @@
     Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
 }
 
-<h2>Yeni Kategori</h2>
-
-<form asp-action="Create" method="post">
-    @Html.AntiForgeryToken()
-    <div asp-validation-summary="All" class="text-danger"></div>
-
-    <div class="mb-3">
-        <label asp-for="CategoryName" class="form-label"></label>
-        <input asp-for="CategoryName" class="form-control" />
-        <span asp-validation-for="CategoryName" class="text-danger"></span>
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Yeni Kategori</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb breadcrumb-custom">
+                <li class="breadcrumb-item"><a href="/Admin/Dashboard">Admin</a></li>
+                <li class="breadcrumb-item"><a href="/Admin/Category">Kategoriler</a></li>
+                <li class="breadcrumb-item active">Yeni</li>
+            </ol>
+        </nav>
     </div>
+</div>
 
-    <div class="mb-3">
-        <label asp-for="ParentCategoryId" class="form-label"></label>
-        <select asp-for="ParentCategoryId" class="form-select">
-            <option value="">Üst Kategori Yok</option>
-            @foreach (var parent in Model.AvailableParentCategories)
-            {
-                <option value="@parent.CategoryId">@parent.CategoryName</option>
-            }
-        </select>
-    </div>
+<div class="content-card">
+    <form asp-action="Create" method="post" class="form-modern">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
 
-    <button type="submit" class="btn btn-primary">Kaydet</button>
-    <a asp-action="Index" class="btn btn-secondary">İptal</a>
-</form>
+        <div class="mb-4">
+            <label asp-for="CategoryName" class="form-label"></label>
+            <input asp-for="CategoryName" class="form-control" placeholder="Kategori adını girin" />
+            <span asp-validation-for="CategoryName" class="text-danger"></span>
+        </div>
+
+        <div class="mb-4">
+            <label asp-for="ParentCategoryId" class="form-label">Üst Kategori (Opsiyonel)</label>
+            <select asp-for="ParentCategoryId" class="form-select">
+                <option value="">Üst Kategori Yok</option>
+                @foreach (var parent in Model.AvailableParentCategories)
+                {
+                    <option value="@parent.CategoryId">@parent.CategoryName</option>
+                }
+            </select>
+        </div>
+
+        <div class="d-flex gap-2 justify-content-end">
+            <a asp-action="Index" class="btn btn-modern btn-secondary">
+                <i class="bi bi-x-circle me-2"></i>İptal
+            </a>
+            <button type="submit" class="btn btn-modern btn-modern-primary">
+                <i class="bi bi-check-circle me-2"></i>Kaydet
+            </button>
+        </div>
+    </form>
+</div>
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
 }
-
