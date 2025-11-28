@@ -1,0 +1,82 @@
+@model CafeMenu.Application.Models.ViewModels.DashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Kategoriye Göre Ürün Sayısı</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Kategori</th>
+                            <th>Ürün Sayısı</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.ProductCountByCategory)
+                        {
+                            <tr>
+                                <td>@item.Key</td>
+                                <td><span class="badge bg-secondary">@item.Value</span></td>
+                            </tr>
+                        }
+                        @if (!Model.ProductCountByCategory.Any())
+                        {
+                            <tr>
+                                <td colspan="2" class="text-center text-muted">Veri bulunamadı</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">Döviz Kurları</h5>
+            </div>
+            <div class="card-body">
+                <div id="currencyRates">
+                    <div class="mb-2">
+                        <strong>TRY:</strong> <span id="tryRate">@Model.CurrencyRates.TryRate.ToString("N4")</span>
+                    </div>
+                    <div class="mb-2">
+                        <strong>USD:</strong> <span id="usdRate">@Model.CurrencyRates.UsdRate.ToString("N4")</span>
+                    </div>
+                    <div class="mb-2">
+                        <strong>EUR:</strong> <span id="eurRate">@Model.CurrencyRates.EurRate.ToString("N4")</span>
+                    </div>
+                    <div class="text-muted small">
+                        Son Güncelleme: <span id="lastUpdated">@Model.CurrencyRates.LastUpdated.ToString("HH:mm:ss")</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        setInterval(function() {
+            fetch('/Admin/Dashboard/GetRates')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('tryRate').textContent = parseFloat(data.tryRate).toFixed(4);
+                    document.getElementById('usdRate').textContent = parseFloat(data.usdRate).toFixed(4);
+                    document.getElementById('eurRate').textContent = parseFloat(data.eurRate).toFixed(4);
+                    const lastUpdated = new Date(data.lastUpdated);
+                    document.getElementById('lastUpdated').textContent = lastUpdated.toLocaleTimeString('tr-TR');
+                })
+                .catch(error => console.error('Kur bilgisi alınamadı:', error));
+        }, 10000);
+    </script>
+}
+

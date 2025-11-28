@@ -1,0 +1,61 @@
+@model CafeMenu.Application.Models.ViewModels.ProductViewModel
+@{
+    ViewData["Title"] = "Yeni Ürün";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Yeni Ürün</h2>
+
+<form asp-action="Create" method="post">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="All" class="text-danger"></div>
+
+    <div class="mb-3">
+        <label asp-for="ProductName" class="form-label"></label>
+        <input asp-for="ProductName" class="form-control" />
+        <span asp-validation-for="ProductName" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="CategoryId" class="form-label"></label>
+        <select asp-for="CategoryId" class="form-select" asp-items="@(new SelectList(Model.AvailableCategories, "CategoryId", "CategoryName"))">
+            <option value="">Kategori Seçiniz</option>
+        </select>
+        <span asp-validation-for="CategoryId" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Price" class="form-label"></label>
+        <input asp-for="Price" class="form-control" type="number" step="0.01" />
+        <span asp-validation-for="Price" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="ImagePath" class="form-label"></label>
+        <input asp-for="ImagePath" class="form-control" />
+        <span asp-validation-for="ImagePath" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Özellikler</label>
+        <div class="border p-3">
+            @foreach (var property in Model.AvailableProperties)
+            {
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="SelectedPropertyIds" value="@property.PropertyId" id="prop_@property.PropertyId" />
+                    <label class="form-check-label" for="prop_@property.PropertyId">
+                        @property.Key: @property.Value
+                    </label>
+                </div>
+            }
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Kaydet</button>
+    <a asp-action="Index" class="btn btn-secondary">İptal</a>
+</form>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
+

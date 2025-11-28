@@ -1,0 +1,77 @@
+@model CafeMenu.Application.Models.ViewModels.CustomerMenuViewModel
+@{
+    ViewData["Title"] = "Menü";
+}
+
+<div class="row">
+    <div class="col-md-3">
+        <div class="list-group">
+            <a href="/Customer?tenantId=@Model.TenantId" class="list-group-item list-group-item-action @(Model.SelectedCategoryId == null ? "active" : "")">
+                Tüm Kategoriler
+            </a>
+            @foreach (var category in Model.Categories)
+            {
+                <a href="/Customer?categoryId=@category.CategoryId&tenantId=@Model.TenantId" 
+                   class="list-group-item list-group-item-action @(Model.SelectedCategoryId == category.CategoryId ? "active" : "")">
+                    @category.CategoryName
+                </a>
+            }
+        </div>
+    </div>
+
+    <div class="col-md-9">
+        <div class="row">
+            @foreach (var product in Model.Products)
+            {
+                <div class="col-sm-6 col-md-4 col-lg-3 mb-4">
+                    <div class="card h-100 shadow-sm">
+                        @if (!string.IsNullOrEmpty(product.ImagePath))
+                        {
+                            <img src="@product.ImagePath" class="card-img-top" alt="@product.ProductName" style="height: 200px; object-fit: cover;">
+                        }
+                        else
+                        {
+                            <div class="card-img-top bg-secondary d-flex align-items-center justify-content-center" style="height: 200px;">
+                                <span class="text-white">Resim Yok</span>
+                            </div>
+                        }
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title">@product.ProductName</h5>
+                            <p class="card-text text-muted small">@product.CategoryName</p>
+                            
+                            @if (product.Properties.Any())
+                            {
+                                <div class="mb-2">
+                                    @foreach (var prop in product.Properties)
+                                    {
+                                        <span class="badge bg-info me-1">@prop.Key: @prop.Value</span>
+                                    }
+                                </div>
+                            }
+
+                            <div class="mt-auto">
+                                <div class="fw-bold text-primary mb-2">
+                                    TRY: @product.Price.ToString("N2") ₺
+                                </div>
+                                <div class="small text-muted">
+                                    USD: @((product.Price / Model.CurrencyRates.UsdRate).ToString("N2")) $
+                                </div>
+                                <div class="small text-muted">
+                                    EUR: @((product.Price / Model.CurrencyRates.EurRate).ToString("N2")) €
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        @if (!Model.Products.Any())
+        {
+            <div class="alert alert-info">
+                Bu kategoride ürün bulunmamaktadır.
+            </div>
+        }
+    </div>
+</div>
+
