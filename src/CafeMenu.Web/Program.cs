@@ -19,17 +19,21 @@ builder.Services.AddDbContext<CafeMenuDbContext>(options =>
 
 builder.Services.AddMemoryCache();
 
-builder.Services.AddHttpClient<ICurrencyService, CurrencyService>(client =>
+builder.Services.AddSession(options =>
 {
-    client.BaseAddress = new Uri("http://any.kur.com/");
-    client.Timeout = TimeSpan.FromSeconds(10);
+    options.IdleTimeout = TimeSpan.FromHours(8);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
 });
+
+builder.Services.AddScoped<ICurrencyService, CurrencyService>();
 
 builder.Services.AddScoped<ICategoryRepository, EfCategoryRepository>();
 builder.Services.AddScoped<IProductRepository, EfProductRepository>();
 builder.Services.AddScoped<IPropertyRepository, EfPropertyRepository>();
 builder.Services.AddScoped<IProductPropertyRepository, EfProductPropertyRepository>();
 builder.Services.AddScoped<IUserRepository, EfUserRepository>();
+builder.Services.AddScoped<ITenantRepository, EfTenantRepository>();
 
 builder.Services.AddScoped<IProductCacheService, ProductCacheService>();
 builder.Services.AddScoped<ITenantResolver, TenantResolver>();
@@ -40,6 +44,8 @@ builder.Services.AddScoped<CategoryService>();
 builder.Services.AddScoped<ProductService>();
 builder.Services.AddScoped<PropertyService>();
 builder.Services.AddScoped<DashboardService>();
+builder.Services.AddScoped<TenantService>();
+builder.Services.AddScoped<UserManagementService>();
 
 builder.Services.AddHttpContextAccessor();
 
@@ -67,6 +73,8 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseStaticFiles();
+
+app.UseSession();
 
 app.UseRouting();
 

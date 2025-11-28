@@ -1,0 +1,83 @@
+@model IReadOnlyList<CafeMenu.Application.Models.UserDto>
+@{
+    ViewData["Title"] = "Kullanıcılar";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Kullanıcılar</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb breadcrumb-custom">
+                <li class="breadcrumb-item"><a href="/Admin/Dashboard">Admin</a></li>
+                <li class="breadcrumb-item active">Kullanıcılar</li>
+            </ol>
+        </nav>
+    </div>
+    <a asp-area="Admin" asp-controller="User" asp-action="Create" class="btn btn-modern btn-modern-primary">
+        <i class="bi bi-plus-circle me-2"></i>Yeni Kullanıcı
+    </a>
+</div>
+
+<div class="content-card">
+    @if (Model.Any())
+    {
+        <div class="table-responsive">
+            <table class="table table-modern">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Ad Soyad</th>
+                        <th>Kullanıcı Adı</th>
+                        <th>Tenant</th>
+                        <th class="text-end">İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var user in Model)
+                    {
+                        <tr>
+                            <td><span class="badge bg-secondary">@user.UserId</span></td>
+                            <td>
+                                <i class="bi bi-person me-2 text-primary"></i>@user.Name @user.Surname
+                            </td>
+                            <td>@user.UserName</td>
+                            <td>
+                                <span class="badge bg-info text-white">@user.TenantName</span>
+                            </td>
+                            <td class="text-end">
+                                <div class="btn-group" role="group">
+                                    <a asp-area="Admin" asp-controller="User" asp-action="Edit" asp-route-id="@user.UserId" asp-route-tenantId="@user.TenantId" 
+                                       class="btn btn-sm btn-modern btn-outline-primary">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <form asp-area="Admin" asp-controller="User" asp-action="Delete" asp-route-id="@user.UserId" asp-route-tenantId="@user.TenantId" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm btn-modern btn-modern-danger" 
+                                                onclick="return confirm('Bu kullanıcıyı silmek istediğinize emin misiniz?')">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <i class="bi bi-people"></i>
+            </div>
+            <h4>Kullanıcı bulunamadı</h4>
+            <p class="text-muted">Henüz kullanıcı eklenmemiş.</p>
+            <a asp-area="Admin" asp-controller="User" asp-action="Create" class="btn btn-modern btn-modern-primary mt-3">
+                <i class="bi bi-plus-circle me-2"></i>İlk Kullanıcıyı Ekle
+            </a>
+        </div>
+    }
+</div>
+

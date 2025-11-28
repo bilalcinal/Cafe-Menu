@@ -33,6 +33,20 @@
                 <span>Özellikler</span>
             </a>
         </li>
+        <li class="nav-item">
+            <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Tenant" ? "active" : "")" 
+               href="/Admin/Tenant">
+                <i class="bi bi-building"></i>
+                <span>Tenantlar</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "User" ? "active" : "")" 
+               href="/Admin/User">
+                <i class="bi bi-people"></i>
+                <span>Kullanıcılar</span>
+            </a>
+        </li>
         <li class="nav-item mt-3">
             <a class="nav-link text-danger" href="/Admin/Account/Logout" onclick="event.preventDefault(); document.getElementById('logoutForm').submit();">
                 <i class="bi bi-box-arrow-right"></i>

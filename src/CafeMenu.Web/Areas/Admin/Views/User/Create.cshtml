@@ -1,0 +1,77 @@
+@model CafeMenu.Application.Models.ViewModels.UserViewModel
+@{
+    ViewData["Title"] = "Yeni Kullanıcı";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Yeni Kullanıcı</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb breadcrumb-custom">
+                <li class="breadcrumb-item"><a href="/Admin/Dashboard">Admin</a></li>
+                <li class="breadcrumb-item"><a href="/Admin/User">Kullanıcılar</a></li>
+                <li class="breadcrumb-item active">Yeni</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="content-card">
+    <form asp-area="Admin" asp-controller="User" asp-action="Create" method="post" class="form-modern">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-4">
+                    <label asp-for="Name" class="form-label"></label>
+                    <input asp-for="Name" class="form-control" placeholder="Ad" />
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-4">
+                    <label asp-for="Surname" class="form-label"></label>
+                    <input asp-for="Surname" class="form-control" placeholder="Soyad" />
+                    <span asp-validation-for="Surname" class="text-danger"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <label asp-for="UserName" class="form-label"></label>
+            <input asp-for="UserName" class="form-control" placeholder="Kullanıcı adı" />
+            <span asp-validation-for="UserName" class="text-danger"></span>
+        </div>
+
+        <div class="mb-4">
+            <label asp-for="Password" class="form-label"></label>
+            <input asp-for="Password" class="form-control" type="password" placeholder="Şifre" />
+            <small class="text-muted">En az 6 karakter</small>
+            <span asp-validation-for="Password" class="text-danger"></span>
+        </div>
+
+        <div class="mb-4">
+            <label asp-for="TenantId" class="form-label"></label>
+            <select asp-for="TenantId" class="form-select" asp-items="@(new SelectList(Model.AvailableTenants, "TenantId", "Name"))">
+                <option value="">Tenant Seçiniz</option>
+            </select>
+            <span asp-validation-for="TenantId" class="text-danger"></span>
+        </div>
+
+        <div class="d-flex gap-2 justify-content-end">
+            <a asp-area="Admin" asp-controller="User" asp-action="Index" class="btn btn-modern btn-secondary">
+                <i class="bi bi-x-circle me-2"></i>İptal
+            </a>
+            <button type="submit" class="btn btn-modern btn-modern-primary">
+                <i class="bi bi-check-circle me-2"></i>Kaydet
+            </button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
+

@@ -1,6 +1,7 @@
 using CafeMenu.Application.Interfaces.Repositories;
 using CafeMenu.Application.Interfaces.Services;
 using CafeMenu.Application.Models.ViewModels;
+using CafeMenu.Domain.Entities;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
@@ -16,15 +17,18 @@ public class AccountController : Controller
     private readonly IUserService _userService;
     private readonly ITenantResolver _tenantResolver;
     private readonly IUserRepository _userRepository;
+    private readonly ITenantRepository _tenantRepository;
 
     public AccountController(
         IUserService userService,
         ITenantResolver tenantResolver,
-        IUserRepository userRepository)
+        IUserRepository userRepository,
+        ITenantRepository tenantRepository)
     {
         _userService = userService;
         _tenantResolver = tenantResolver;
         _userRepository = userRepository;
+        _tenantRepository = tenantRepository;
     }
 
     [HttpGet]
@@ -43,28 +47,32 @@ public class AccountController : Controller
             return View(model);
         }
 
-        var tenantId = _tenantResolver.GetCurrentTenantId();
-        
-        var user = await _userRepository.GetByUserNameAsync(model.UserName, tenantId, cancellationToken);
-        if (user == null)
+        var allTenants = await _tenantRepository.GetAllAsync(cancellationToken);
+        User? user = null;
+        int? foundTenantId = null;
+
+        foreach (var tenant in allTenants)
         {
-            ModelState.AddModelError(string.Empty, $"Kullanıcı bulunamadı. Username: {model.UserName}, TenantId: {tenantId}");
+            var testUser = await _userRepository.GetByUserNameAsync(model.UserName, tenant.TenantId, cancellationToken);
+            if (testUser != null && !testUser.IsDeleted)
+            {
+                var isValid = await _userService.ValidateLoginAsync(model.UserName, model.Password, tenant.TenantId, cancellationToken);
+                if (isValid)
+                {
+                    user = testUser;
+                    foundTenantId = tenant.TenantId;
+                    break;
+                }
+            }
+        }
+
+        if (user == null || foundTenantId == null)
+        {
+            ModelState.AddModelError(string.Empty, "Kullanıcı adı veya şifre hatalı.");
             return View(model);
         }
 
-        if (user.IsDeleted)
-        {
-            ModelState.AddModelError(string.Empty, "Bu kullanıcı silinmiş");
-            return View(model);
-        }
-
-        var isValid = await _userService.ValidateLoginAsync(model.UserName, model.Password, tenantId, cancellationToken);
-
-        if (!isValid)
-        {
-            ModelState.AddModelError(string.Empty, "Kullanıcı adı veya şifre hatalı. Lütfen şifrenizi kontrol edin.");
-            return View(model);
-        }
+        var tenantId = foundTenantId.Value;
 
         var claims = new List<Claim>
         {

@@ -1,21 +1,21 @@
-@model IReadOnlyList<CafeMenu.Application.Models.CategoryDto>
+@model IReadOnlyList<CafeMenu.Application.Models.TenantDto>
 @{
-    ViewData["Title"] = "Kategoriler";
+    ViewData["Title"] = "Tenantlar";
     Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
 }
 
 <div class="page-header">
     <div>
-        <h1 class="page-title">Kategoriler</h1>
+        <h1 class="page-title">Tenantlar</h1>
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb breadcrumb-custom">
                 <li class="breadcrumb-item"><a href="/Admin/Dashboard">Admin</a></li>
-                <li class="breadcrumb-item active">Kategoriler</li>
+                <li class="breadcrumb-item active">Tenantlar</li>
             </ol>
         </nav>
     </div>
-    <a asp-area="Admin" asp-controller="Category" asp-action="Create" class="btn btn-modern btn-modern-primary">
-        <i class="bi bi-plus-circle me-2"></i>Yeni Kategori
+    <a asp-area="Admin" asp-controller="Tenant" asp-action="Create" class="btn btn-modern btn-modern-primary">
+        <i class="bi bi-plus-circle me-2"></i>Yeni Tenant
     </a>
 </div>
 
@@ -27,41 +27,45 @@
                 <thead>
                     <tr>
                         <th>ID</th>
-                        <th>Kategori Adı</th>
-                        <th>Üst Kategori</th>
+                        <th>Ad</th>
+                        <th>Kod</th>
+                        <th>Durum</th>
+                        <th>Oluşturulma</th>
                         <th class="text-end">İşlemler</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var category in Model)
+                    @foreach (var tenant in Model)
                     {
                         <tr>
-                            <td><span class="badge bg-secondary">@category.CategoryId</span></td>
+                            <td><span class="badge bg-secondary">@tenant.TenantId</span></td>
                             <td>
-                                <i class="bi bi-folder me-2 text-primary"></i>@category.CategoryName
+                                <i class="bi bi-building me-2 text-primary"></i>@tenant.Name
                             </td>
                             <td>
-                                @if (!string.IsNullOrEmpty(category.ParentCategoryName))
+                                <span class="badge bg-info text-white">@tenant.Code</span>
+                            </td>
+                            <td>
+                                @if (tenant.IsActive)
                                 {
-                                    <span class="text-muted">
-                                        <i class="bi bi-arrow-up me-1"></i>@category.ParentCategoryName
-                                    </span>
+                                    <span class="badge bg-success">Aktif</span>
                                 }
                                 else
                                 {
-                                    <span class="text-muted">-</span>
+                                    <span class="badge bg-danger">Pasif</span>
                                 }
                             </td>
+                            <td>@tenant.CreatedDate.ToString("dd.MM.yyyy HH:mm")</td>
                             <td class="text-end">
                                 <div class="btn-group" role="group">
-                                    <a asp-area="Admin" asp-controller="Category" asp-action="Edit" asp-route-id="@category.CategoryId" 
+                                    <a asp-area="Admin" asp-controller="Tenant" asp-action="Edit" asp-route-id="@tenant.TenantId" 
                                        class="btn btn-sm btn-modern btn-outline-primary">
                                         <i class="bi bi-pencil"></i>
                                     </a>
-                                    <form asp-area="Admin" asp-controller="Category" asp-action="Delete" asp-route-id="@category.CategoryId" method="post" class="d-inline">
+                                    <form asp-area="Admin" asp-controller="Tenant" asp-action="Delete" asp-route-id="@tenant.TenantId" method="post" class="d-inline">
                                         @Html.AntiForgeryToken()
                                         <button type="submit" class="btn btn-sm btn-modern btn-modern-danger" 
-                                                onclick="return confirm('Bu kategoriyi silmek istediğinize emin misiniz?')">
+                                                onclick="return confirm('Bu tenantı silmek istediğinize emin misiniz?')">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </form>
@@ -77,13 +81,14 @@
     {
         <div class="empty-state">
             <div class="empty-state-icon">
-                <i class="bi bi-folder-x"></i>
+                <i class="bi bi-building-x"></i>
             </div>
-            <h4>Kategori bulunamadı</h4>
-            <p class="text-muted">Henüz kategori eklenmemiş.</p>
-            <a asp-area="Admin" asp-controller="Category" asp-action="Create" class="btn btn-modern btn-modern-primary mt-3">
-                <i class="bi bi-plus-circle me-2"></i>İlk Kategoriyi Ekle
+            <h4>Tenant bulunamadı</h4>
+            <p class="text-muted">Henüz tenant eklenmemiş.</p>
+            <a asp-area="Admin" asp-controller="Tenant" asp-action="Create" class="btn btn-modern btn-modern-primary mt-3">
+                <i class="bi bi-plus-circle me-2"></i>İlk Tenantı Ekle
             </a>
         </div>
     }
 </div>
+

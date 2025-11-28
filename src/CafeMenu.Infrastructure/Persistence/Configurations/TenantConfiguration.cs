@@ -19,6 +19,24 @@ public class TenantConfiguration : IEntityTypeConfiguration<Tenant>
             .HasColumnName("NAME")
             .HasMaxLength(200)
             .IsRequired();
+
+        builder.Property(t => t.Code)
+            .HasColumnName("CODE")
+            .HasMaxLength(50)
+            .IsRequired();
+
+        builder.Property(t => t.IsActive)
+            .HasColumnName("ISACTIVE")
+            .HasDefaultValue(true)
+            .IsRequired();
+
+        builder.Property(t => t.CreatedDate)
+            .HasColumnName("CREATEDDATE")
+            .HasDefaultValueSql("GETUTCDATE()")
+            .IsRequired();
+
+        builder.HasIndex(t => t.Code)
+            .IsUnique();
     }
 }
 

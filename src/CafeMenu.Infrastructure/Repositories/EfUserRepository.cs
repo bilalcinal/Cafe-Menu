@@ -73,5 +73,48 @@ public class EfUserRepository : IUserRepository
 
         return Convert.ToBoolean(isValidParam.Value);
     }
+
+    public async Task<IReadOnlyList<User>> GetAllForTenantAsync(int tenantId, CancellationToken cancellationToken = default)
+    {
+        return await _context.Users
+            .Where(u => u.TenantId == tenantId && !u.IsDeleted)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task UpdateAsync(User user, CancellationToken cancellationToken = default)
+    {
+        _context.Users.Update(user);
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task UpdatePasswordAsync(int userId, string plainPassword, int tenantId, CancellationToken cancellationToken = default)
+    {
+        var user = await GetByIdAsync(userId, tenantId, cancellationToken);
+        if (user == null)
+            throw new InvalidOperationException("Kullanıcı bulunamadı");
+
+        var connection = _context.Database.GetDbConnection();
+        if (connection.State != System.Data.ConnectionState.Open)
+        {
+            await connection.OpenAsync(cancellationToken);
+        }
+
+        using var command = connection.CreateCommand();
+        command.CommandText = @"
+            DECLARE @Salt VARBINARY(32) = CRYPT_GEN_RANDOM(32);
+            DECLARE @Hash VARBINARY(64) = HASHBYTES('SHA2_256', @Salt + CAST(@PlainPassword AS VARBINARY(200)));
+            UPDATE [USER] SET HASHPASSWORD = @Hash, SALTPASSWORD = @Salt WHERE USERID = @UserId AND TENANTID = @TenantId";
+        command.CommandType = System.Data.CommandType.Text;
+
+        var userIdParam = new SqlParameter("@UserId", SqlDbType.Int) { Value = userId };
+        var tenantIdParam = new SqlParameter("@TenantId", SqlDbType.Int) { Value = tenantId };
+        var plainPasswordParam = new SqlParameter("@PlainPassword", SqlDbType.NVarChar, 200) { Value = plainPassword };
+
+        command.Parameters.Add(userIdParam);
+        command.Parameters.Add(tenantIdParam);
+        command.Parameters.Add(plainPasswordParam);
+
+        await command.ExecuteNonQueryAsync(cancellationToken);
+    }
 }
 
