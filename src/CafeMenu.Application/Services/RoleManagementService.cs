@@ -105,10 +105,20 @@ public class RoleManagementService
 
         var role = await _roleRepository.GetByIdAsync(roleId, tenantId, cancellationToken);
         if (role == null)
-            return null;
+        {
+            role = await _roleRepository.GetByIdWithoutTenantAsync(roleId, cancellationToken);
+            if (role == null)
+                return null;
+        }
 
         var rolePermissions = await _rolePermissionRepository.GetByRoleIdAsync(roleId, cancellationToken);
         var selectedPermissionIds = rolePermissions.Select(rp => rp.PermissionId).ToList();
+        
+        if (role.Name == "SuperAdmin" && role.IsSystem)
+        {
+            selectedPermissionIds = availablePermissions.Select(p => p.PermissionId).ToList();
+        }
+        
         var roleTenant = await _tenantRepository.GetByIdAsync(role.TenantId, cancellationToken);
 
         return new RoleViewModel

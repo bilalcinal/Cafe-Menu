@@ -20,6 +20,12 @@ public class EfRoleRepository : IRoleRepository
             .FirstOrDefaultAsync(r => r.RoleId == roleId && r.TenantId == tenantId && !r.IsDeleted, cancellationToken);
     }
 
+    public async Task<Role?> GetByIdWithoutTenantAsync(int roleId, CancellationToken cancellationToken = default)
+    {
+        return await _context.Roles
+            .FirstOrDefaultAsync(r => r.RoleId == roleId && !r.IsDeleted, cancellationToken);
+    }
+
     public async Task<IReadOnlyList<Role>> GetAllForTenantAsync(int tenantId, CancellationToken cancellationToken = default)
     {
         return await _context.Roles

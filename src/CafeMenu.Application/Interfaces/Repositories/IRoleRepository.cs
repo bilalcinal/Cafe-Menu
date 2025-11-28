@@ -5,6 +5,7 @@ namespace CafeMenu.Application.Interfaces.Repositories;
 public interface IRoleRepository
 {
     Task<Role?> GetByIdAsync(int roleId, int tenantId, CancellationToken cancellationToken = default);
+    Task<Role?> GetByIdWithoutTenantAsync(int roleId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<Role>> GetAllForTenantAsync(int tenantId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<Role>> GetAllAsync(CancellationToken cancellationToken = default);
     Task<Role?> GetByNameAsync(string name, int tenantId, CancellationToken cancellationToken = default);

@@ -1,4 +1,4 @@
-@model CafeMenu.Application.Models.ViewModels.RoleViewModel
+@model CafeMenu.Application.Models.ViewModels.RolePermissionsViewModel
 @{
     ViewData["Title"] = "Rol İzinleri";
     Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
@@ -63,7 +63,7 @@
     }
     else
     {
-        <form asp-area="Admin" asp-controller="Role" asp-action="Permissions" asp-route-id="@Model.RoleId" method="post" class="form-modern">
+        <form asp-area="Admin" asp-controller="Role" asp-action="Permissions" method="post" class="form-modern">
             @Html.AntiForgeryToken()
             <input type="hidden" asp-for="RoleId" />
             <input type="hidden" asp-for="TenantId" />

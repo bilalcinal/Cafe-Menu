@@ -24,6 +24,7 @@ public class RoleController : Controller
         _permissionService = permissionService;
     }
 
+    [HttpGet]
     public async Task<IActionResult> Index(CancellationToken cancellationToken = default)
     {
         var currentRole = _permissionService.GetCurrentUserRole();
@@ -137,18 +138,28 @@ public class RoleController : Controller
             return RedirectToAction("AccessDenied", "Account");
         }
 
-        var viewModel = await _roleManagementService.GetByIdAsync(id, currentTenantId, cancellationToken);
-        if (viewModel == null)
+        var roleViewModel = await _roleManagementService.GetByIdAsync(id, currentTenantId, cancellationToken);
+        if (roleViewModel == null)
         {
             return NotFound();
         }
 
-        return View(viewModel);
+        var editViewModel = new RoleEditViewModel
+        {
+            RoleId = roleViewModel.RoleId,
+            Name = roleViewModel.Name,
+            TenantId = roleViewModel.TenantId,
+            TenantName = roleViewModel.TenantName,
+            IsSystem = roleViewModel.IsSystem,
+            IsActive = roleViewModel.IsActive
+        };
+
+        return View(editViewModel);
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(RoleViewModel viewModel, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Edit(RoleEditViewModel model, CancellationToken cancellationToken = default)
     {
         var currentRole = _permissionService.GetCurrentUserRole();
         var currentTenantId = _permissionService.GetCurrentTenantId();
@@ -160,28 +171,38 @@ public class RoleController : Controller
 
         if (!ModelState.IsValid)
         {
-            var existingViewModel = await _roleManagementService.GetByIdAsync(viewModel.RoleId, currentTenantId, cancellationToken);
+            var existingViewModel = await _roleManagementService.GetByIdAsync(model.RoleId, currentTenantId, cancellationToken);
             if (existingViewModel != null)
             {
-                viewModel.AvailablePermissions = existingViewModel.AvailablePermissions;
+                model.TenantName = existingViewModel.TenantName;
+                model.IsSystem = existingViewModel.IsSystem;
             }
-            return View(viewModel);
+            return View(model);
         }
 
         try
         {
-            await _roleManagementService.UpdateAsync(viewModel, cancellationToken);
+            var roleViewModel = new RoleViewModel
+            {
+                RoleId = model.RoleId,
+                Name = model.Name,
+                TenantId = model.TenantId,
+                IsActive = model.IsActive,
+                SelectedPermissionIds = new List<int>()
+            };
+            await _roleManagementService.UpdateAsync(roleViewModel, cancellationToken);
             return RedirectToAction(nameof(Index));
         }
         catch (InvalidOperationException ex)
         {
             ModelState.AddModelError(string.Empty, ex.Message);
-            var existingViewModel = await _roleManagementService.GetByIdAsync(viewModel.RoleId, currentTenantId, cancellationToken);
+            var existingViewModel = await _roleManagementService.GetByIdAsync(model.RoleId, currentTenantId, cancellationToken);
             if (existingViewModel != null)
             {
-                viewModel.AvailablePermissions = existingViewModel.AvailablePermissions;
+                model.TenantName = existingViewModel.TenantName;
+                model.IsSystem = existingViewModel.IsSystem;
             }
-            return View(viewModel);
+            return View(model);
         }
     }
 
@@ -220,28 +241,39 @@ public class RoleController : Controller
             return RedirectToAction("AccessDenied", "Account");
         }
 
-        var viewModel = await _roleManagementService.GetByIdAsync(id, currentTenantId, cancellationToken);
-        if (viewModel == null)
+        var roleViewModel = await _roleManagementService.GetByIdAsync(id, currentTenantId, cancellationToken);
+        if (roleViewModel == null)
         {
             return NotFound();
         }
 
-        if (currentRole != "SuperAdmin" && viewModel.TenantId != currentTenantId)
+        if (currentRole != "SuperAdmin" && roleViewModel.TenantId != currentTenantId)
         {
             return RedirectToAction("AccessDenied", "Account");
         }
 
-        if (viewModel.IsSystem && viewModel.Name == "SuperAdmin")
+        if (roleViewModel.IsSystem && roleViewModel.Name == "SuperAdmin")
         {
             TempData["InfoMessage"] = "SuperAdmin rolü tüm izinlere sahiptir ve düzenlenemez.";
         }
 
-        return View(viewModel);
+        var permissionsViewModel = new RolePermissionsViewModel
+        {
+            RoleId = roleViewModel.RoleId,
+            Name = roleViewModel.Name,
+            TenantId = roleViewModel.TenantId,
+            TenantName = roleViewModel.TenantName,
+            IsSystem = roleViewModel.IsSystem,
+            SelectedPermissionIds = roleViewModel.SelectedPermissionIds,
+            AvailablePermissions = roleViewModel.AvailablePermissions
+        };
+
+        return View(permissionsViewModel);
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Permissions(int id, RoleViewModel viewModel, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Permissions(RolePermissionsViewModel model, CancellationToken cancellationToken = default)
     {
         var currentRole = _permissionService.GetCurrentUserRole();
         var currentTenantId = _permissionService.GetCurrentTenantId();
@@ -251,7 +283,7 @@ public class RoleController : Controller
             return RedirectToAction("AccessDenied", "Account");
         }
 
-        var existingRole = await _roleManagementService.GetByIdAsync(id, currentTenantId, cancellationToken);
+        var existingRole = await _roleManagementService.GetByIdAsync(model.RoleId, currentTenantId, cancellationToken);
         if (existingRole == null)
         {
             return NotFound();
@@ -265,25 +297,34 @@ public class RoleController : Controller
         if (existingRole.IsSystem && existingRole.Name == "SuperAdmin")
         {
             TempData["ErrorMessage"] = "SuperAdmin rolü düzenlenemez.";
-            return RedirectToAction(nameof(Permissions), new { id });
+            return RedirectToAction(nameof(Permissions), new { id = model.RoleId });
         }
 
         try
         {
-            await _roleManagementService.UpdateRolePermissionsAsync(id, viewModel.SelectedPermissionIds, cancellationToken);
+            await _roleManagementService.UpdateRolePermissionsAsync(model.RoleId, model.SelectedPermissionIds, cancellationToken);
             TempData["SuccessMessage"] = "İzinler başarıyla güncellendi.";
-            return RedirectToAction(nameof(Permissions), new { id });
+            return RedirectToAction(nameof(Permissions), new { id = model.RoleId });
         }
         catch (InvalidOperationException ex)
         {
             ModelState.AddModelError(string.Empty, ex.Message);
-            var updatedViewModel = await _roleManagementService.GetByIdAsync(id, currentTenantId, cancellationToken);
+            var updatedViewModel = await _roleManagementService.GetByIdAsync(model.RoleId, currentTenantId, cancellationToken);
             if (updatedViewModel != null)
             {
-                viewModel = updatedViewModel;
+                model.Name = updatedViewModel.Name;
+                model.TenantId = updatedViewModel.TenantId;
+                model.TenantName = updatedViewModel.TenantName;
+                model.IsSystem = updatedViewModel.IsSystem;
+                model.AvailablePermissions = updatedViewModel.AvailablePermissions;
             }
-            return View(viewModel);
+            return View(model);
         }
+    }
+    [HttpGet]
+    public IActionResult Test()
+    {
+        return Content("RoleController Test()");
     }
 }
 

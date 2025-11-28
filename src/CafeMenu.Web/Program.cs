@@ -77,6 +77,9 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+// İstersen ekle:
+app.UseHttpsRedirection();
+
 app.UseStaticFiles();
 
 app.UseSession();
@@ -86,23 +89,21 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapControllerRoute(
-    name: "areas",
-    pattern: "{area:exists}/{controller=Dashboard}/{action=Index}/{id?}");
+// ADMIN AREA ROUTE
+app.MapAreaControllerRoute(
+    name: "AdminArea",
+    areaName: "Admin",
+    pattern: "Admin/{controller=Dashboard}/{action=Index}/{id?}");
 
-app.MapControllerRoute(
-    name: "adminDefault",
-    pattern: "Admin",
-    defaults: new { area = "Admin", controller = "Dashboard", action = "Index" });
-
-app.MapControllerRoute(
-    name: "adminDefaultLower",
-    pattern: "admin",
-    defaults: new { area = "Admin", controller = "Dashboard", action = "Index" });
-
+// DEFAULT ROUTE (Customer tarafı)
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Customer}/{action=Index}/{id?}");
 
-app.Run();
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<CafeMenuDbContext>();
+    await PermissionSeeder.SeedPermissionsAsync(context);
+}
 
+app.Run();

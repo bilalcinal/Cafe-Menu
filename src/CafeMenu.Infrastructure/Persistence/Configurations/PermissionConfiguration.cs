@@ -30,6 +30,10 @@ public class PermissionConfiguration : IEntityTypeConfiguration<Permission>
             .HasMaxLength(100)
             .IsRequired();
 
+        builder.Property(p => p.CreatedDate)
+            .HasColumnName("CREATEDDATE")
+            .IsRequired();
+
         builder.Property(p => p.IsActive)
             .HasColumnName("ISACTIVE")
             .IsRequired()
