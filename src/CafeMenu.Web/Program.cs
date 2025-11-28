@@ -1,0 +1,83 @@
+using CafeMenu.Application.Interfaces.Repositories;
+using CafeMenu.Application.Interfaces.Services;
+using CafeMenu.Application.Services;
+using CafeMenu.Infrastructure.Persistence;
+using CafeMenu.Infrastructure.Repositories;
+using CafeMenu.Infrastructure.Services;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.EntityFrameworkCore;
+
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddControllersWithViews();
+
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? "Server=localhost,1433;Database=CafeMenuDb;User Id=sa;Password=Strong!Pass2025;TrustServerCertificate=True;";
+
+builder.Services.AddDbContext<CafeMenuDbContext>(options =>
+    options.UseSqlServer(connectionString));
+
+builder.Services.AddMemoryCache();
+
+builder.Services.AddHttpClient<ICurrencyService, CurrencyService>(client =>
+{
+    client.BaseAddress = new Uri("http://any.kur.com/");
+    client.Timeout = TimeSpan.FromSeconds(10);
+});
+
+builder.Services.AddScoped<ICategoryRepository, EfCategoryRepository>();
+builder.Services.AddScoped<IProductRepository, EfProductRepository>();
+builder.Services.AddScoped<IPropertyRepository, EfPropertyRepository>();
+builder.Services.AddScoped<IProductPropertyRepository, EfProductPropertyRepository>();
+builder.Services.AddScoped<IUserRepository, EfUserRepository>();
+
+builder.Services.AddScoped<IProductCacheService, ProductCacheService>();
+builder.Services.AddScoped<ITenantResolver, TenantResolver>();
+builder.Services.AddScoped<IUserService, UserService>();
+
+builder.Services.AddScoped<CustomerMenuService>();
+builder.Services.AddScoped<CategoryService>();
+builder.Services.AddScoped<ProductService>();
+builder.Services.AddScoped<PropertyService>();
+builder.Services.AddScoped<DashboardService>();
+
+builder.Services.AddHttpContextAccessor();
+
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/Admin/Account/Login";
+        options.LogoutPath = "/Admin/Account/Logout";
+        options.AccessDeniedPath = "/Admin/Account/AccessDenied";
+        options.ExpireTimeSpan = TimeSpan.FromHours(8);
+        options.SlidingExpiration = true;
+    });
+
+builder.Services.AddAuthorization();
+
+var app = builder.Build();
+
+if (!app.Environment.IsDevelopment())
+{
+    app.UseExceptionHandler("/Home/Error");
+    app.UseHsts();
+}
+
+app.UseHttpsRedirection();
+app.UseStaticFiles();
+
+app.UseRouting();
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapControllerRoute(
+    name: "areas",
+    pattern: "{area:exists}/{controller=Dashboard}/{action=Index}/{id?}");
+
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Customer}/{action=Index}/{id?}");
+
+app.Run();
+
