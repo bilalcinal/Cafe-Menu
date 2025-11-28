@@ -33,29 +33,23 @@ public class UserController : Controller
         _permissionService = permissionService;
     }
 
-    [RequirePermission("User.View")]
+    [RequirePermission("Admin.User.List")]
     public async Task<IActionResult> Index(CancellationToken cancellationToken = default)
     {
-        var currentRole = _permissionService.GetCurrentUserRole();
-        if (currentRole != "SuperAdmin" && currentRole != "TenantAdmin")
-        {
-            return RedirectToAction("AccessDenied", "Account");
-        }
-
         var users = await _userManagementService.GetAllAsync(cancellationToken);
         return View(users);
     }
 
     [HttpGet]
-    [RequirePermission("User.Create")]
+    [RequirePermission("Admin.User.Create")]
     public async Task<IActionResult> Create(CancellationToken cancellationToken = default)
     {
-        var currentRole = _permissionService.GetCurrentUserRole();
+        var isSuperAdmin = _permissionService.IsCurrentUserSuperAdmin();
         var currentTenantId = _permissionService.GetCurrentTenantId();
 
         var viewModel = new UserViewModel();
 
-        if (currentRole == "SuperAdmin")
+        if (isSuperAdmin)
         {
             var tenants = await _tenantService.GetAllAsync(cancellationToken);
             viewModel.AvailableTenants = tenants.Where(t => t.IsActive).Select(t => new CafeMenu.Application.Models.TenantDto
@@ -91,7 +85,7 @@ public class UserController : Controller
         var roles = await _roleRepository.GetAllForTenantAsync(selectedTenantId, cancellationToken);
         viewModel.AvailableRoles = roles.Where(r => {
             if (r.IsSystem && r.Name == "SuperAdmin")
-                return selectedTenantId == 1 && currentRole == "SuperAdmin";
+                return selectedTenantId == 1 && isSuperAdmin;
             return true;
         }).Select(r => new CafeMenu.Application.Models.RoleDto
         {
@@ -112,12 +106,12 @@ public class UserController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(UserViewModel viewModel, CancellationToken cancellationToken = default)
     {
-        var currentRole = _permissionService.GetCurrentUserRole();
+        var isSuperAdmin = _permissionService.IsCurrentUserSuperAdmin();
         var currentTenantId = _permissionService.GetCurrentTenantId();
 
         if (!ModelState.IsValid)
         {
-            if (currentRole == "SuperAdmin")
+            if (isSuperAdmin)
             {
                 var tenants = await _tenantService.GetAllAsync(cancellationToken);
                 viewModel.AvailableTenants = tenants.Where(t => t.IsActive).Select(t => new CafeMenu.Application.Models.TenantDto
@@ -153,7 +147,7 @@ public class UserController : Controller
             var roles = await _roleRepository.GetAllForTenantAsync(selectedTenantId, cancellationToken);
             viewModel.AvailableRoles = roles.Where(r => {
                 if (r.IsSystem && r.Name == "SuperAdmin")
-                    return selectedTenantId == 1 && currentRole == "SuperAdmin";
+                    return selectedTenantId == 1 && isSuperAdmin;
                 return true;
             }).Select(r => new CafeMenu.Application.Models.RoleDto
             {
@@ -178,7 +172,7 @@ public class UserController : Controller
         catch (InvalidOperationException ex)
         {
             ModelState.AddModelError(string.Empty, ex.Message);
-            if (currentRole == "SuperAdmin")
+            if (isSuperAdmin)
             {
                 var tenants = await _tenantService.GetAllAsync(cancellationToken);
                 viewModel.AvailableTenants = tenants.Where(t => t.IsActive).Select(t => new CafeMenu.Application.Models.TenantDto
@@ -214,7 +208,7 @@ public class UserController : Controller
             var roles = await _roleRepository.GetAllForTenantAsync(selectedTenantId, cancellationToken);
             viewModel.AvailableRoles = roles.Where(r => {
                 if (r.IsSystem && r.Name == "SuperAdmin")
-                    return selectedTenantId == 1 && currentRole == "SuperAdmin";
+                    return selectedTenantId == 1 && isSuperAdmin;
                 return true;
             }).Select(r => new CafeMenu.Application.Models.RoleDto
             {
@@ -233,10 +227,10 @@ public class UserController : Controller
     }
 
     [HttpGet]
-    [RequirePermission("User.Edit")]
+    [RequirePermission("Admin.User.Edit")]
     public async Task<IActionResult> Edit(int id, int tenantId, CancellationToken cancellationToken = default)
     {
-        var currentRole = _permissionService.GetCurrentUserRole();
+        var isSuperAdmin = _permissionService.IsCurrentUserSuperAdmin();
         var currentTenantId = _permissionService.GetCurrentTenantId();
 
         var viewModel = await _userManagementService.GetByIdAsync(id, tenantId, cancellationToken);
@@ -245,12 +239,12 @@ public class UserController : Controller
             return NotFound();
         }
 
-        if (currentRole != "SuperAdmin" && viewModel.TenantId != currentTenantId)
+        if (!isSuperAdmin && viewModel.TenantId != currentTenantId)
         {
             return RedirectToAction("AccessDenied", "Account");
         }
 
-        if (currentRole == "SuperAdmin")
+        if (isSuperAdmin)
         {
             var tenants = await _tenantService.GetAllAsync(cancellationToken);
             viewModel.AvailableTenants = tenants.Where(t => t.IsActive).Select(t => new CafeMenu.Application.Models.TenantDto
@@ -285,7 +279,7 @@ public class UserController : Controller
         var roles = await _roleRepository.GetAllForTenantAsync(selectedTenantId, cancellationToken);
         viewModel.AvailableRoles = roles.Where(r => {
             if (r.IsSystem && r.Name == "SuperAdmin")
-                return selectedTenantId == 1 && currentRole == "SuperAdmin";
+                return selectedTenantId == 1 && isSuperAdmin;
             return true;
         }).Select(r => new CafeMenu.Application.Models.RoleDto
         {
@@ -306,12 +300,12 @@ public class UserController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(UserViewModel viewModel, CancellationToken cancellationToken = default)
     {
-        var currentRole = _permissionService.GetCurrentUserRole();
+        var isSuperAdmin = _permissionService.IsCurrentUserSuperAdmin();
         var currentTenantId = _permissionService.GetCurrentTenantId();
 
         if (!ModelState.IsValid)
         {
-            if (currentRole == "SuperAdmin")
+            if (isSuperAdmin)
             {
                 var tenants = await _tenantService.GetAllAsync(cancellationToken);
                 viewModel.AvailableTenants = tenants.Where(t => t.IsActive).Select(t => new CafeMenu.Application.Models.TenantDto
@@ -347,7 +341,7 @@ public class UserController : Controller
             var roles = await _roleRepository.GetAllForTenantAsync(selectedTenantId, cancellationToken);
             viewModel.AvailableRoles = roles.Where(r => {
                 if (r.IsSystem && r.Name == "SuperAdmin")
-                    return selectedTenantId == 1 && currentRole == "SuperAdmin";
+                    return selectedTenantId == 1 && isSuperAdmin;
                 return true;
             }).Select(r => new CafeMenu.Application.Models.RoleDto
             {
@@ -372,7 +366,7 @@ public class UserController : Controller
         catch (InvalidOperationException ex)
         {
             ModelState.AddModelError(string.Empty, ex.Message);
-            if (currentRole == "SuperAdmin")
+            if (isSuperAdmin)
             {
                 var tenants = await _tenantService.GetAllAsync(cancellationToken);
                 viewModel.AvailableTenants = tenants.Where(t => t.IsActive).Select(t => new CafeMenu.Application.Models.TenantDto
@@ -408,7 +402,7 @@ public class UserController : Controller
             var roles = await _roleRepository.GetAllForTenantAsync(selectedTenantId, cancellationToken);
             viewModel.AvailableRoles = roles.Where(r => {
                 if (r.IsSystem && r.Name == "SuperAdmin")
-                    return selectedTenantId == 1 && currentRole == "SuperAdmin";
+                    return selectedTenantId == 1 && isSuperAdmin;
                 return true;
             }).Select(r => new CafeMenu.Application.Models.RoleDto
             {
@@ -428,7 +422,7 @@ public class UserController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    [RequirePermission("User.Delete")]
+    [RequirePermission("Admin.User.Delete")]
     public async Task<IActionResult> Delete(int id, int tenantId, CancellationToken cancellationToken = default)
     {
         try
@@ -445,10 +439,10 @@ public class UserController : Controller
     [HttpGet]
     public async Task<IActionResult> GetRolesByTenant(int tenantId, CancellationToken cancellationToken = default)
     {
-        var currentRole = _permissionService.GetCurrentUserRole();
+        var isSuperAdmin = _permissionService.IsCurrentUserSuperAdmin();
         var currentTenantId = _permissionService.GetCurrentTenantId();
 
-        if (currentRole != "SuperAdmin" && tenantId != currentTenantId)
+        if (!isSuperAdmin && tenantId != currentTenantId)
         {
             return Json(new { success = false, message = "Yetkisiz erişim" });
         }
@@ -456,7 +450,7 @@ public class UserController : Controller
         var roles = await _roleRepository.GetAllForTenantAsync(tenantId, cancellationToken);
         var roleList = roles.Where(r => {
             if (r.IsSystem && r.Name == "SuperAdmin")
-                return tenantId == 1 && currentRole == "SuperAdmin";
+                return tenantId == 1 && isSuperAdmin;
             return true;
         }).Select(r => new
         {

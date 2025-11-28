@@ -99,10 +99,26 @@ public class AccountController : Controller
             new Claim("RoleId", user.RoleId.ToString())
         };
 
-        var permissions = await _permissionService.GetUserPermissionsAsync(user.UserId, cancellationToken);
-        foreach (var permission in permissions)
+        var rolePermissions = await _rolePermissionRepository.GetByRoleIdAsync(user.RoleId, cancellationToken);
+        var permissionKeys = new List<string>();
+
+        if (roleName == "SuperAdmin")
         {
-            claims.Add(new Claim("Permission", permission));
+            var allPermissions = await _permissionRepository.GetActiveAsync(cancellationToken);
+            permissionKeys = allPermissions.Select(p => p.Key).ToList();
+        }
+        else
+        {
+            permissionKeys = rolePermissions
+                .Where(rp => rp.Permission != null)
+                .Select(rp => rp.Permission!.Key)
+                .Where(k => !string.IsNullOrEmpty(k))
+                .ToList();
+        }
+
+        foreach (var permissionKey in permissionKeys)
+        {
+            claims.Add(new Claim("Permission", permissionKey));
         }
 
         var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);

@@ -25,18 +25,14 @@ public class RoleController : Controller
     }
 
     [HttpGet]
+    [RequirePermission("Admin.Role.List")]
     public async Task<IActionResult> Index(CancellationToken cancellationToken = default)
     {
-        var currentRole = _permissionService.GetCurrentUserRole();
+        var isSuperAdmin = _permissionService.IsCurrentUserSuperAdmin();
         var currentTenantId = _permissionService.GetCurrentTenantId();
 
-        if (currentRole != "SuperAdmin" && currentRole != "TenantAdmin")
-        {
-            return RedirectToAction("AccessDenied", "Account");
-        }
-
         IReadOnlyList<RoleDto> roles;
-        if (currentRole == "SuperAdmin")
+        if (isSuperAdmin)
         {
             roles = await _roleManagementService.GetAllAsync(cancellationToken);
         }
@@ -49,15 +45,11 @@ public class RoleController : Controller
     }
 
     [HttpGet]
+    [RequirePermission("Admin.Role.Create")]
     public async Task<IActionResult> Create(CancellationToken cancellationToken = default)
     {
-        var currentRole = _permissionService.GetCurrentUserRole();
+        var isSuperAdmin = _permissionService.IsCurrentUserSuperAdmin();
         var currentTenantId = _permissionService.GetCurrentTenantId();
-
-        if (currentRole != "SuperAdmin" && currentRole != "TenantAdmin")
-        {
-            return RedirectToAction("AccessDenied", "Account");
-        }
 
         var viewModel = await _roleManagementService.GetByIdAsync(0, currentTenantId, cancellationToken);
         if (viewModel == null)
@@ -65,7 +57,7 @@ public class RoleController : Controller
             return NotFound();
         }
 
-        if (currentRole != "SuperAdmin")
+        if (!isSuperAdmin)
         {
             viewModel.AvailableTenants = viewModel.AvailableTenants.Where(t => t.TenantId == currentTenantId).ToList();
         }
@@ -75,17 +67,13 @@ public class RoleController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [RequirePermission("Admin.Role.Create")]
     public async Task<IActionResult> Create(RoleViewModel viewModel, CancellationToken cancellationToken = default)
     {
-        var currentRole = _permissionService.GetCurrentUserRole();
+        var isSuperAdmin = _permissionService.IsCurrentUserSuperAdmin();
         var currentTenantId = _permissionService.GetCurrentTenantId();
 
-        if (currentRole != "SuperAdmin" && currentRole != "TenantAdmin")
-        {
-            return RedirectToAction("AccessDenied", "Account");
-        }
-
-        if (currentRole != "SuperAdmin")
+        if (!isSuperAdmin)
         {
             viewModel.TenantId = currentTenantId;
         }
@@ -97,7 +85,7 @@ public class RoleController : Controller
             {
                 viewModel.AvailablePermissions = tempViewModel.AvailablePermissions;
                 viewModel.AvailableTenants = tempViewModel.AvailableTenants;
-                if (currentRole != "SuperAdmin")
+                if (!isSuperAdmin)
                 {
                     viewModel.AvailableTenants = viewModel.AvailableTenants.Where(t => t.TenantId == currentTenantId).ToList();
                 }
@@ -118,7 +106,7 @@ public class RoleController : Controller
             {
                 viewModel.AvailablePermissions = tempViewModel.AvailablePermissions;
                 viewModel.AvailableTenants = tempViewModel.AvailableTenants;
-                if (currentRole != "SuperAdmin")
+                if (!isSuperAdmin)
                 {
                     viewModel.AvailableTenants = viewModel.AvailableTenants.Where(t => t.TenantId == currentTenantId).ToList();
                 }
@@ -128,20 +116,21 @@ public class RoleController : Controller
     }
 
     [HttpGet]
+    [RequirePermission("Admin.Role.Edit")]
     public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken = default)
     {
-        var currentRole = _permissionService.GetCurrentUserRole();
+        var isSuperAdmin = _permissionService.IsCurrentUserSuperAdmin();
         var currentTenantId = _permissionService.GetCurrentTenantId();
-
-        if (currentRole != "SuperAdmin" && currentRole != "TenantAdmin")
-        {
-            return RedirectToAction("AccessDenied", "Account");
-        }
 
         var roleViewModel = await _roleManagementService.GetByIdAsync(id, currentTenantId, cancellationToken);
         if (roleViewModel == null)
         {
             return NotFound();
+        }
+
+        if (!isSuperAdmin && roleViewModel.TenantId != currentTenantId)
+        {
+            return RedirectToAction("AccessDenied", "Account");
         }
 
         var editViewModel = new RoleEditViewModel
@@ -159,24 +148,27 @@ public class RoleController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [RequirePermission("Admin.Role.Edit")]
     public async Task<IActionResult> Edit(RoleEditViewModel model, CancellationToken cancellationToken = default)
     {
-        var currentRole = _permissionService.GetCurrentUserRole();
+        var isSuperAdmin = _permissionService.IsCurrentUserSuperAdmin();
         var currentTenantId = _permissionService.GetCurrentTenantId();
 
-        if (currentRole != "SuperAdmin" && currentRole != "TenantAdmin")
+        var existingRole = await _roleManagementService.GetByIdAsync(model.RoleId, currentTenantId, cancellationToken);
+        if (existingRole == null)
+        {
+            return NotFound();
+        }
+
+        if (!isSuperAdmin && existingRole.TenantId != currentTenantId)
         {
             return RedirectToAction("AccessDenied", "Account");
         }
 
         if (!ModelState.IsValid)
         {
-            var existingViewModel = await _roleManagementService.GetByIdAsync(model.RoleId, currentTenantId, cancellationToken);
-            if (existingViewModel != null)
-            {
-                model.TenantName = existingViewModel.TenantName;
-                model.IsSystem = existingViewModel.IsSystem;
-            }
+            model.TenantName = existingRole.TenantName;
+            model.IsSystem = existingRole.IsSystem;
             return View(model);
         }
 
@@ -196,27 +188,18 @@ public class RoleController : Controller
         catch (InvalidOperationException ex)
         {
             ModelState.AddModelError(string.Empty, ex.Message);
-            var existingViewModel = await _roleManagementService.GetByIdAsync(model.RoleId, currentTenantId, cancellationToken);
-            if (existingViewModel != null)
-            {
-                model.TenantName = existingViewModel.TenantName;
-                model.IsSystem = existingViewModel.IsSystem;
-            }
+            model.TenantName = existingRole.TenantName;
+            model.IsSystem = existingRole.IsSystem;
             return View(model);
         }
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [RequirePermission("Admin.Role.Delete")]
     public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken = default)
     {
-        var currentRole = _permissionService.GetCurrentUserRole();
         var currentTenantId = _permissionService.GetCurrentTenantId();
-
-        if (currentRole != "SuperAdmin" && currentRole != "TenantAdmin")
-        {
-            return RedirectToAction("AccessDenied", "Account");
-        }
 
         try
         {
@@ -231,15 +214,11 @@ public class RoleController : Controller
     }
 
     [HttpGet]
+    [RequirePermission("Admin.Role.ManagePermissions")]
     public async Task<IActionResult> Permissions(int id, CancellationToken cancellationToken = default)
     {
-        var currentRole = _permissionService.GetCurrentUserRole();
+        var isSuperAdmin = _permissionService.IsCurrentUserSuperAdmin();
         var currentTenantId = _permissionService.GetCurrentTenantId();
-
-        if (currentRole != "SuperAdmin" && currentRole != "TenantAdmin")
-        {
-            return RedirectToAction("AccessDenied", "Account");
-        }
 
         var roleViewModel = await _roleManagementService.GetByIdAsync(id, currentTenantId, cancellationToken);
         if (roleViewModel == null)
@@ -247,7 +226,7 @@ public class RoleController : Controller
             return NotFound();
         }
 
-        if (currentRole != "SuperAdmin" && roleViewModel.TenantId != currentTenantId)
+        if (!isSuperAdmin && roleViewModel.TenantId != currentTenantId)
         {
             return RedirectToAction("AccessDenied", "Account");
         }
@@ -273,15 +252,11 @@ public class RoleController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [RequirePermission("Admin.Role.ManagePermissions")]
     public async Task<IActionResult> Permissions(RolePermissionsViewModel model, CancellationToken cancellationToken = default)
     {
-        var currentRole = _permissionService.GetCurrentUserRole();
+        var isSuperAdmin = _permissionService.IsCurrentUserSuperAdmin();
         var currentTenantId = _permissionService.GetCurrentTenantId();
-
-        if (currentRole != "SuperAdmin" && currentRole != "TenantAdmin")
-        {
-            return RedirectToAction("AccessDenied", "Account");
-        }
 
         var existingRole = await _roleManagementService.GetByIdAsync(model.RoleId, currentTenantId, cancellationToken);
         if (existingRole == null)
@@ -289,7 +264,7 @@ public class RoleController : Controller
             return NotFound();
         }
 
-        if (currentRole != "SuperAdmin" && existingRole.TenantId != currentTenantId)
+        if (!isSuperAdmin && existingRole.TenantId != currentTenantId)
         {
             return RedirectToAction("AccessDenied", "Account");
         }

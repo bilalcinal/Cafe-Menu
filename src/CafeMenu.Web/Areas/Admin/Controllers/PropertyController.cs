@@ -17,7 +17,7 @@ public class PropertyController : Controller
         _propertyService = propertyService;
     }
 
-    [RequirePermission("Property.View")]
+    [RequirePermission("Admin.Property.List")]
     public async Task<IActionResult> Index(CancellationToken cancellationToken = default)
     {
         var properties = await _propertyService.GetAllAsync(cancellationToken);
@@ -25,7 +25,7 @@ public class PropertyController : Controller
     }
 
     [HttpGet]
-    [RequirePermission("Property.Create")]
+    [RequirePermission("Admin.Property.Create")]
     public IActionResult Create()
     {
         return View(new PropertyViewModel());
@@ -45,7 +45,7 @@ public class PropertyController : Controller
     }
 
     [HttpGet]
-    [RequirePermission("Property.Edit")]
+    [RequirePermission("Admin.Property.Edit")]
     public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken = default)
     {
         var viewModel = await _propertyService.GetByIdAsync(id, cancellationToken);
@@ -79,7 +79,7 @@ public class PropertyController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    [RequirePermission("Property.Delete")]
+    [RequirePermission("Admin.Property.Delete")]
     public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken = default)
     {
         await _propertyService.DeleteAsync(id, cancellationToken);

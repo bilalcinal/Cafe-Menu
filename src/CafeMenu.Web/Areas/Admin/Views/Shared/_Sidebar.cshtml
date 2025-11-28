@@ -4,11 +4,13 @@
     var role = user?.FindFirst(ClaimTypes.Role)?.Value;
     var permissions = user?.FindAll("Permission").Select(c => c.Value).ToList() ?? new List<string>();
     var isSuperAdmin = role == "SuperAdmin";
-    var isTenantAdmin = role == "TenantAdmin";
-    var hasCategoryView = isSuperAdmin || isTenantAdmin || permissions.Contains("Category.View");
-    var hasProductView = isSuperAdmin || isTenantAdmin || permissions.Contains("Product.View");
-    var hasPropertyView = isSuperAdmin || isTenantAdmin || permissions.Contains("Property.View");
-    var hasUserView = isSuperAdmin || isTenantAdmin || permissions.Contains("User.View");
+    var hasCategoryView = isSuperAdmin || permissions.Any(p => p.StartsWith("Admin.Category."));
+    var hasProductView = isSuperAdmin  || permissions.Any(p => p.StartsWith("Admin.Product."));
+    var hasPropertyView = isSuperAdmin  || permissions.Any(p => p.StartsWith("Admin.Property."));
+    var hasUserView = isSuperAdmin  || permissions.Any(p => p.StartsWith("Admin.User."));
+    var hasRoleView = isSuperAdmin  || permissions.Any(p => p.StartsWith("Admin.Role."));
+    var hasTenantView = isSuperAdmin;
+    var hasDashboardView = true;
 }
 <nav class="admin-sidebar" id="adminSidebar">
     <div class="admin-sidebar-brand">
@@ -17,13 +19,16 @@
         </h4>
     </div>
     <ul class="admin-sidebar-nav list-unstyled">
-        <li class="nav-item">
-            <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Dashboard" ? "active" : "")" 
-               href="/Admin/Dashboard">
-                <i class="bi bi-speedometer2"></i>
-                <span>Dashboard</span>
-            </a>
-        </li>
+        @if (hasDashboardView)
+        {
+            <li class="nav-item">
+                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Dashboard" ? "active" : "")" 
+                   href="/Admin/Dashboard">
+                    <i class="bi bi-speedometer2"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+        }
         @if (hasCategoryView)
         {
             <li class="nav-item">
@@ -54,7 +59,7 @@
                 </a>
             </li>
         }
-        @if (isSuperAdmin)
+        @if (hasTenantView)
         {
             <li class="nav-item">
                 <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Tenant" ? "active" : "")" 
@@ -64,7 +69,7 @@
                 </a>
             </li>
         }
-        @if (isSuperAdmin || isTenantAdmin)
+        @if (hasRoleView)
         {
             <li class="nav-item">
                 <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Role" ? "active" : "")" 
