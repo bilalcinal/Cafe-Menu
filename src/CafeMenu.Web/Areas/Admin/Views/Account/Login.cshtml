@@ -19,19 +19,23 @@
                 <div class="card shadow">
                     <div class="card-body">
                         <h3 class="card-title text-center mb-4">Admin Girişi</h3>
-                        <form asp-action="Login" method="post">
+                        <form asp-area="Admin" asp-controller="Account" asp-action="Login" method="post">
                             @Html.AntiForgeryToken()
+                            @if (!string.IsNullOrEmpty(Context.Request.Query["ReturnUrl"]))
+                            {
+                                <input type="hidden" name="returnUrl" value="@Context.Request.Query["ReturnUrl"]" />
+                            }
                             <div asp-validation-summary="All" class="text-danger mb-3"></div>
                             
                             <div class="mb-3">
-                                <label asp-for="UserName" class="form-label"></label>
-                                <input asp-for="UserName" class="form-control" />
+                                <label for="UserName" class="form-label">Kullanıcı Adı</label>
+                                <input type="text" id="UserName" name="UserName" class="form-control" autocomplete="username" required value="@Model.UserName" />
                                 <span asp-validation-for="UserName" class="text-danger"></span>
                             </div>
 
                             <div class="mb-3">
-                                <label asp-for="Password" class="form-label"></label>
-                                <input asp-for="Password" class="form-control" />
+                                <label for="Password" class="form-label">Şifre</label>
+                                <input type="password" id="Password" name="Password" class="form-control" autocomplete="current-password" required />
                                 <span asp-validation-for="Password" class="text-danger"></span>
                             </div>
 
@@ -43,6 +47,9 @@
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation/1.19.3/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
 </body>
 </html>
 

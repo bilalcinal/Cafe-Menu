@@ -15,7 +15,7 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
     ?? "Server=localhost,1433;Database=CafeMenuDb;User Id=sa;Password=Strong!Pass2025;TrustServerCertificate=True;";
 
 builder.Services.AddDbContext<CafeMenuDbContext>(options =>
-    options.UseSqlServer(connectionString));
+    options.UseSqlServer(connectionString, b => b.MigrationsAssembly("CafeMenu.Infrastructure")));
 
 builder.Services.AddMemoryCache();
 
@@ -51,6 +51,9 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.AccessDeniedPath = "/Admin/Account/AccessDenied";
         options.ExpireTimeSpan = TimeSpan.FromHours(8);
         options.SlidingExpiration = true;
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.None;
+        options.Cookie.SameSite = SameSiteMode.Lax;
     });
 
 builder.Services.AddAuthorization();
@@ -63,7 +66,6 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();

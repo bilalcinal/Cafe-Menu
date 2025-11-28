@@ -44,6 +44,19 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .HasColumnName("TENANTID")
             .IsRequired();
 
+        builder.Property(u => u.IsDeleted)
+            .HasColumnName("IsDeleted")
+            .HasDefaultValue(false)
+            .IsRequired();
+
+        builder.Property(u => u.CreatedDate)
+            .HasColumnName("CreatedDate")
+            .HasDefaultValueSql("GETUTCDATE()")
+            .IsRequired();
+
+        builder.Property(u => u.CreatorUserId)
+            .HasColumnName("CreatorUserId");
+
         builder.HasIndex(u => new { u.UserName, u.TenantId })
             .IsUnique();
     }

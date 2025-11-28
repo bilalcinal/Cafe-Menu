@@ -35,26 +35,34 @@ public class AccountController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Login(LoginViewModel model, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null, CancellationToken cancellationToken = default)
     {
         if (!ModelState.IsValid)
         {
+            ViewBag.ReturnUrl = returnUrl;
             return View(model);
         }
 
         var tenantId = _tenantResolver.GetCurrentTenantId();
+        
+        var user = await _userRepository.GetByUserNameAsync(model.UserName, tenantId, cancellationToken);
+        if (user == null)
+        {
+            ModelState.AddModelError(string.Empty, $"Kullanıcı bulunamadı. Username: {model.UserName}, TenantId: {tenantId}");
+            return View(model);
+        }
+
+        if (user.IsDeleted)
+        {
+            ModelState.AddModelError(string.Empty, "Bu kullanıcı silinmiş");
+            return View(model);
+        }
+
         var isValid = await _userService.ValidateLoginAsync(model.UserName, model.Password, tenantId, cancellationToken);
 
         if (!isValid)
         {
-            ModelState.AddModelError(string.Empty, "Kullanıcı adı veya şifre hatalı");
-            return View(model);
-        }
-
-        var user = await _userRepository.GetByUserNameAsync(model.UserName, tenantId, cancellationToken);
-        if (user == null)
-        {
-            ModelState.AddModelError(string.Empty, "Kullanıcı bulunamadı");
+            ModelState.AddModelError(string.Empty, "Kullanıcı adı veya şifre hatalı. Lütfen şifrenizi kontrol edin.");
             return View(model);
         }
 
@@ -77,7 +85,12 @@ public class AccountController : Controller
             new ClaimsPrincipal(claimsIdentity),
             authProperties);
 
-        return RedirectToAction("Index", "Dashboard");
+        if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+        {
+            return Redirect(returnUrl);
+        }
+
+        return RedirectToAction("Index", "Dashboard", new { area = "Admin" });
     }
 
     [HttpPost]

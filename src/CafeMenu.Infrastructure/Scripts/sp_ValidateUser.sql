@@ -12,7 +12,7 @@ BEGIN
 
     SELECT @StoredHash = HASHPASSWORD, @StoredSalt = SALTPASSWORD
     FROM [USER]
-    WHERE USERNAME = @UserName AND TENANTID = @TenantId;
+    WHERE USERNAME = @UserName AND TENANTID = @TenantId AND IsDeleted = 0;
 
     IF @StoredHash IS NULL OR @StoredSalt IS NULL
     BEGIN
