@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using CafeMenu.Application.Models;
 
 namespace CafeMenu.Application.Models.ViewModels;
 

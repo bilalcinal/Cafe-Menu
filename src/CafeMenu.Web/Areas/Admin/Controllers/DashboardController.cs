@@ -1,4 +1,5 @@
 using CafeMenu.Application.Services;
+using CafeMenu.Application.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
