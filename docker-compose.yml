@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: cafe-menu-sqlserver
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=Strong!Pass2025
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+    networks:
+      - cafe-menu-network
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cafe-menu-web
+    ports:
+      - "8080:80"
+    environment:
+      - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=CafeMenuDb;User Id=sa;Password=Strong!Pass2025;TrustServerCertificate=True;
+      - ASPNETCORE_ENVIRONMENT=Development
+    depends_on:
+      - sqlserver
+    networks:
+      - cafe-menu-network
+
+volumes:
+  sqlserver-data:
+
+networks:
+  cafe-menu-network:
+    driver: bridge
+
