@@ -100,17 +100,35 @@
             if (tenantSelect) {
                 tenantSelect.addEventListener('change', function() {
                     const selectedTenantId = this.value;
-                    const roleOptions = roleSelect.querySelectorAll('option[data-tenant-id]');
                     
-                    roleSelect.innerHTML = '<option value="">Rol Seçiniz</option>';
+                    if (!selectedTenantId) {
+                        roleSelect.innerHTML = '<option value="">Rol Seçiniz</option>';
+                        return;
+                    }
                     
-                    roleOptions.forEach(function(option) {
-                        if (option.getAttribute('data-tenant-id') === selectedTenantId) {
-                            roleSelect.appendChild(option.cloneNode(true));
-                        }
-                    });
+                    roleSelect.innerHTML = '<option value="">Yükleniyor...</option>';
+                    roleSelect.disabled = true;
                     
-                    roleSelect.value = '';
+                    fetch('/Admin/User/GetRolesByTenant?tenantId=' + selectedTenantId)
+                        .then(response => response.json())
+                        .then(data => {
+                            roleSelect.innerHTML = '<option value="">Rol Seçiniz</option>';
+                            
+                            if (data.success && data.roles) {
+                                data.roles.forEach(function(role) {
+                                    const option = document.createElement('option');
+                                    option.value = role.roleId;
+                                    option.textContent = role.name;
+                                    roleSelect.appendChild(option);
+                                });
+                            }
+                            
+                            roleSelect.disabled = false;
+                        })
+                        .catch(error => {
+                            roleSelect.innerHTML = '<option value="">Hata oluştu</option>';
+                            roleSelect.disabled = false;
+                        });
                 });
             }
         });

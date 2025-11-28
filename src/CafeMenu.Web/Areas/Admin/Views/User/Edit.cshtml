@@ -97,28 +97,51 @@
         document.addEventListener('DOMContentLoaded', function() {
             const tenantSelect = document.getElementById('tenantSelect');
             const roleSelect = document.getElementById('roleSelect');
+            const currentRoleId = @Model.RoleId;
             
             if (tenantSelect) {
                 function updateRoles() {
                     const selectedTenantId = tenantSelect.value;
-                    const roleOptions = roleSelect.querySelectorAll('option[data-tenant-id]');
-                    const currentRoleId = roleSelect.value;
                     
-                    roleSelect.innerHTML = '<option value="">Rol Seçiniz</option>';
-                    
-                    roleOptions.forEach(function(option) {
-                        if (option.getAttribute('data-tenant-id') === selectedTenantId) {
-                            roleSelect.appendChild(option.cloneNode(true));
-                        }
-                    });
-                    
-                    if (currentRoleId && roleSelect.querySelector('option[value="' + currentRoleId + '"]')) {
-                        roleSelect.value = currentRoleId;
+                    if (!selectedTenantId) {
+                        roleSelect.innerHTML = '<option value="">Rol Seçiniz</option>';
+                        return;
                     }
+                    
+                    const previousValue = roleSelect.value;
+                    roleSelect.innerHTML = '<option value="">Yükleniyor...</option>';
+                    roleSelect.disabled = true;
+                    
+                    fetch('/Admin/User/GetRolesByTenant?tenantId=' + selectedTenantId)
+                        .then(response => response.json())
+                        .then(data => {
+                            roleSelect.innerHTML = '<option value="">Rol Seçiniz</option>';
+                            
+                            if (data.success && data.roles) {
+                                data.roles.forEach(function(role) {
+                                    const option = document.createElement('option');
+                                    option.value = role.roleId;
+                                    option.textContent = role.name;
+                                    if (role.roleId == currentRoleId) {
+                                        option.selected = true;
+                                    }
+                                    roleSelect.appendChild(option);
+                                });
+                            }
+                            
+                            if (!roleSelect.value && previousValue) {
+                                roleSelect.value = previousValue;
+                            }
+                            
+                            roleSelect.disabled = false;
+                        })
+                        .catch(error => {
+                            roleSelect.innerHTML = '<option value="">Hata oluştu</option>';
+                            roleSelect.disabled = false;
+                        });
                 }
                 
                 tenantSelect.addEventListener('change', updateRoles);
-                updateRoles();
             }
         });
     </script>

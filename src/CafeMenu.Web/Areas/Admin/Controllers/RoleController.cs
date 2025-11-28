@@ -321,10 +321,5 @@ public class RoleController : Controller
             return View(model);
         }
     }
-    [HttpGet]
-    public IActionResult Test()
-    {
-        return Content("RoleController Test()");
-    }
 }
 

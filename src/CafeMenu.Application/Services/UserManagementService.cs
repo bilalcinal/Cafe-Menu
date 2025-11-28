@@ -102,7 +102,7 @@ public class UserManagementService
         List<Domain.Entities.Tenant> tenants;
         if (currentRole == "SuperAdmin")
         {
-            tenants = (await _tenantRepository.GetAllAsync(cancellationToken)).ToList();
+            tenants = (await _tenantRepository.GetAllAsync(cancellationToken)).Where(t => t.IsActive).ToList();
         }
         else
         {
@@ -128,7 +128,11 @@ public class UserManagementService
                 IsActive = t.IsActive,
                 CreatedDate = t.CreatedDate
             }).ToList(),
-            AvailableRoles = roles.Where(r => !r.IsSystem || r.Name != "SuperAdmin").Select(r => new RoleDto
+            AvailableRoles = roles.Where(r => {
+                if (r.IsSystem && r.Name == "SuperAdmin")
+                    return user.TenantId == 1 && currentRole == "SuperAdmin";
+                return true;
+            }).Select(r => new RoleDto
             {
                 RoleId = r.RoleId,
                 Name = r.Name,
