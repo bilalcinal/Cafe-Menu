@@ -57,15 +57,15 @@
                             </td>
                             <td>@tenant.CreatedDate.ToString("dd.MM.yyyy HH:mm")</td>
                             <td class="text-end">
-                                <div class="btn-group" role="group">
+                                <div class="d-flex justify-content-end gap-2">
                                     <a asp-area="Admin" asp-controller="Tenant" asp-action="Edit" asp-route-id="@tenant.TenantId" 
-                                       class="btn btn-sm btn-modern btn-outline-primary">
+                                       class="btn btn-sm btn-outline-primary">
                                         <i class="bi bi-pencil"></i>
                                     </a>
-                                    <form asp-area="Admin" asp-controller="Tenant" asp-action="Delete" asp-route-id="@tenant.TenantId" method="post" class="d-inline">
+                                    <form asp-area="Admin" asp-controller="Tenant" asp-action="Delete" asp-route-id="@tenant.TenantId" method="post">
                                         @Html.AntiForgeryToken()
-                                        <button type="submit" class="btn btn-sm btn-modern btn-modern-danger" 
-                                                onclick="return confirm('Bu tenantı silmek istediğinize emin misiniz?')">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" 
+                                                onclick="return confirm('Bu tenantı silmek istediğinize emin misiniz?');">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </form>

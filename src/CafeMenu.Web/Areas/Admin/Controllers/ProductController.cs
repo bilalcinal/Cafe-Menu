@@ -12,15 +12,18 @@ public class ProductController : Controller
     private readonly ProductService _productService;
     private readonly CategoryService _categoryService;
     private readonly PropertyService _propertyService;
+    private readonly IWebHostEnvironment _webHostEnvironment;
 
     public ProductController(
         ProductService productService,
         CategoryService categoryService,
-        PropertyService propertyService)
+        PropertyService propertyService,
+        IWebHostEnvironment webHostEnvironment)
     {
         _productService = productService;
         _categoryService = categoryService;
         _propertyService = propertyService;
+        _webHostEnvironment = webHostEnvironment;
     }
 
     public async Task<IActionResult> Index(CancellationToken cancellationToken = default)
@@ -42,13 +45,32 @@ public class ProductController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(ProductViewModel viewModel, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Create(ProductViewModel viewModel, IFormFile? imageFile, CancellationToken cancellationToken = default)
     {
         if (!ModelState.IsValid)
         {
             viewModel.AvailableCategories = (await _categoryService.GetAllAsync(cancellationToken)).ToList();
             viewModel.AvailableProperties = (await _propertyService.GetAllAsync(cancellationToken)).ToList();
             return View(viewModel);
+        }
+
+        if (imageFile != null && imageFile.Length > 0)
+        {
+            var uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "products");
+            if (!Directory.Exists(uploadsFolder))
+            {
+                Directory.CreateDirectory(uploadsFolder);
+            }
+
+            var uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(imageFile.FileName);
+            var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+            using (var fileStream = new FileStream(filePath, FileMode.Create))
+            {
+                await imageFile.CopyToAsync(fileStream, cancellationToken);
+            }
+
+            viewModel.ImagePath = $"/uploads/products/{uniqueFileName}";
         }
 
         await _productService.CreateAsync(viewModel, cancellationToken);
@@ -71,13 +93,42 @@ public class ProductController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(ProductViewModel viewModel, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Edit(ProductViewModel viewModel, IFormFile? imageFile, CancellationToken cancellationToken = default)
     {
         if (!ModelState.IsValid)
         {
             viewModel.AvailableCategories = (await _categoryService.GetAllAsync(cancellationToken)).ToList();
             viewModel.AvailableProperties = (await _propertyService.GetAllAsync(cancellationToken)).ToList();
             return View(viewModel);
+        }
+
+        if (imageFile != null && imageFile.Length > 0)
+        {
+            var uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "products");
+            if (!Directory.Exists(uploadsFolder))
+            {
+                Directory.CreateDirectory(uploadsFolder);
+            }
+
+            var existingProduct = await _productService.GetByIdAsync(viewModel.ProductId, cancellationToken);
+            if (existingProduct != null && !string.IsNullOrEmpty(existingProduct.ImagePath))
+            {
+                var oldFilePath = Path.Combine(_webHostEnvironment.WebRootPath, existingProduct.ImagePath.TrimStart('/'));
+                if (System.IO.File.Exists(oldFilePath))
+                {
+                    System.IO.File.Delete(oldFilePath);
+                }
+            }
+
+            var uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(imageFile.FileName);
+            var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+            using (var fileStream = new FileStream(filePath, FileMode.Create))
+            {
+                await imageFile.CopyToAsync(fileStream, cancellationToken);
+            }
+
+            viewModel.ImagePath = $"/uploads/products/{uniqueFileName}";
         }
 
         try

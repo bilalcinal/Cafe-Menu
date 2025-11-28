@@ -18,7 +18,7 @@
 </div>
 
 <div class="content-card">
-    <form asp-area="Admin" asp-controller="Product" asp-action="Create" method="post" class="form-modern">
+    <form asp-area="Admin" asp-controller="Product" asp-action="Create" method="post" enctype="multipart/form-data" class="form-modern">
         @Html.AntiForgeryToken()
         <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
 
@@ -48,10 +48,9 @@
                 </div>
 
                 <div class="mb-4">
-                    <label asp-for="ImagePath" class="form-label">Resim URL</label>
-                    <input asp-for="ImagePath" class="form-control" placeholder="https://example.com/image.jpg" />
-                    <small class="text-muted">Ürün resminin URL adresini girin</small>
-                    <span asp-validation-for="ImagePath" class="text-danger"></span>
+                    <label for="imageFile" class="form-label">Ürün Görseli</label>
+                    <input name="imageFile" id="imageFile" type="file" class="form-control" accept="image/*" />
+                    <small class="text-muted">Ürün görselini seçin (JPG, PNG, GIF)</small>
                 </div>
             </div>
         </div>

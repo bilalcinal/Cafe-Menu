@@ -18,7 +18,7 @@
 </div>
 
 <div class="content-card">
-    <form asp-area="Admin" asp-controller="Product" asp-action="Edit" method="post" class="form-modern">
+    <form asp-area="Admin" asp-controller="Product" asp-action="Edit" method="post" enctype="multipart/form-data" class="form-modern">
         @Html.AntiForgeryToken()
         <input type="hidden" asp-for="ProductId" />
         <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
@@ -49,16 +49,18 @@
                 </div>
 
                 <div class="mb-4">
-                    <label asp-for="ImagePath" class="form-label">Resim URL</label>
-                    <input asp-for="ImagePath" class="form-control" placeholder="https://example.com/image.jpg" />
                     @if (!string.IsNullOrEmpty(Model.ImagePath))
                     {
-                        <div class="mt-2">
-                            <img src="@Model.ImagePath" alt="Preview" class="img-thumbnail" style="max-height: 150px;" />
+                        <div class="mb-3">
+                            <label class="form-label">Mevcut Görsel</label>
+                            <div>
+                                <img src="@Model.ImagePath" alt="@Model.ProductName" class="img-thumbnail" style="max-height: 150px;" />
+                            </div>
                         </div>
                     }
-                    <small class="text-muted">Ürün resminin URL adresini girin</small>
-                    <span asp-validation-for="ImagePath" class="text-danger"></span>
+                    <label for="imageFile" class="form-label">Ürün Görseli @(string.IsNullOrEmpty(Model.ImagePath) ? "" : "(Değiştir)")</label>
+                    <input name="imageFile" id="imageFile" type="file" class="form-control" accept="image/*" />
+                    <small class="text-muted">Yeni görsel seçmek için dosya seçin (JPG, PNG, GIF)</small>
                 </div>
             </div>
         </div>

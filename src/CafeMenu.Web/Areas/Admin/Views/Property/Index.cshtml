@@ -44,15 +44,15 @@
                             </td>
                             <td>@property.Value</td>
                             <td class="text-end">
-                                <div class="btn-group" role="group">
+                                <div class="d-flex justify-content-end gap-2">
                                     <a asp-area="Admin" asp-controller="Property" asp-action="Edit" asp-route-id="@property.PropertyId" 
-                                       class="btn btn-sm btn-modern btn-outline-primary">
+                                       class="btn btn-sm btn-outline-primary">
                                         <i class="bi bi-pencil"></i>
                                     </a>
-                                    <form asp-area="Admin" asp-controller="Property" asp-action="Delete" asp-route-id="@property.PropertyId" method="post" class="d-inline">
+                                    <form asp-area="Admin" asp-controller="Property" asp-action="Delete" asp-route-id="@property.PropertyId" method="post">
                                         @Html.AntiForgeryToken()
-                                        <button type="submit" class="btn btn-sm btn-modern btn-modern-danger" 
-                                                onclick="return confirm('Bu özelliği silmek istediğinize emin misiniz?')">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" 
+                                                onclick="return confirm('Bu özelliği silmek istediğinize emin misiniz?');">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </form>

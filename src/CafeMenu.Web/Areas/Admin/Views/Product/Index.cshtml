@@ -62,15 +62,15 @@
                                 <span class="fw-bold text-success">@product.Price.ToString("N2") ₺</span>
                             </td>
                             <td class="text-end">
-                                <div class="btn-group" role="group">
+                                <div class="d-flex justify-content-end gap-2">
                                     <a asp-area="Admin" asp-controller="Product" asp-action="Edit" asp-route-id="@product.ProductId" 
-                                       class="btn btn-sm btn-modern btn-outline-primary">
+                                       class="btn btn-sm btn-outline-primary">
                                         <i class="bi bi-pencil"></i>
                                     </a>
-                                    <form asp-area="Admin" asp-controller="Product" asp-action="Delete" asp-route-id="@product.ProductId" method="post" class="d-inline">
+                                    <form asp-area="Admin" asp-controller="Product" asp-action="Delete" asp-route-id="@product.ProductId" method="post">
                                         @Html.AntiForgeryToken()
-                                        <button type="submit" class="btn btn-sm btn-modern btn-modern-danger" 
-                                                onclick="return confirm('Bu ürünü silmek istediğinize emin misiniz?')">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" 
+                                                onclick="return confirm('Bu ürünü silmek istediğinize emin misiniz?');">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </form>
