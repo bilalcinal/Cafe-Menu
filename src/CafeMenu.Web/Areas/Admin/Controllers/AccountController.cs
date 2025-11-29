@@ -87,7 +87,9 @@ public class AccountController : Controller
 
         var tenantId = foundTenantId.Value;
 
-        var role = await _roleRepository.GetByIdAsync(user.RoleId, tenantId, cancellationToken);
+        var role = await _roleRepository
+            .Query()
+            .FirstOrDefaultAsync(r => r.RoleId == user.RoleId && r.TenantId == tenantId && !r.IsDeleted, cancellationToken);
         var roleName = role?.Name ?? string.Empty;
 
         var claims = new List<Claim>

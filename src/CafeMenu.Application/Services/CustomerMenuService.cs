@@ -11,28 +11,52 @@ public class CustomerMenuService
     private readonly IProductCacheService _productCacheService;
     private readonly ICurrencyService _currencyService;
     private readonly ITenantResolver _tenantResolver;
-    private readonly CategoryService _categoryService;
 
     public CustomerMenuService(
         ICategoryRepository categoryRepository,
         IProductCacheService productCacheService,
         ICurrencyService currencyService,
-        ITenantResolver tenantResolver,
-        CategoryService categoryService)
+        ITenantResolver tenantResolver)
     {
         _categoryRepository = categoryRepository;
         _productCacheService = productCacheService;
         _currencyService = currencyService;
         _tenantResolver = tenantResolver;
-        _categoryService = categoryService;
     }
 
     public async Task<CustomerMenuViewModel> GetMenuAsync(int? categoryId, CancellationToken cancellationToken = default)
     {
         var tenantId = _tenantResolver.GetCurrentTenantId();
 
-        var categoryHierarchy = await _categoryService.GetCategoryHierarchyAsync(cancellationToken);
-        var allCategories = await _categoryService.GetAllAsync(cancellationToken);
+        var allCategories = await _categoryRepository.GetAllForTenantAsync(tenantId, cancellationToken);
+        var categoryDtos = allCategories
+            .Where(c => !c.IsDeleted)
+            .Select(c => new CategoryDto
+            {
+                CategoryId = c.CategoryId,
+                CategoryName = c.CategoryName,
+                ParentCategoryId = c.ParentCategoryId,
+                ParentCategoryName = c.ParentCategory?.CategoryName,
+                Children = new List<CategoryDto>()
+            })
+            .ToList();
+
+        var categoryDict = categoryDtos.ToDictionary(c => c.CategoryId, c => c);
+        var rootCategories = new List<CategoryDto>();
+
+        foreach (var category in categoryDtos)
+        {
+            if (category.ParentCategoryId.HasValue && categoryDict.ContainsKey(category.ParentCategoryId.Value))
+            {
+                categoryDict[category.ParentCategoryId.Value].Children.Add(category);
+            }
+            else
+            {
+                rootCategories.Add(category);
+            }
+        }
+
+        var categoryHierarchy = rootCategories;
 
         var allProducts = await _productCacheService.GetProductsForTenantAsync(tenantId, false, cancellationToken);
 
@@ -41,7 +65,7 @@ public class CustomerMenuService
 
         if (categoryId.HasValue)
         {
-            var selectedCategory = allCategories.FirstOrDefault(c => c.CategoryId == categoryId.Value);
+            var selectedCategory = categoryDtos.FirstOrDefault(c => c.CategoryId == categoryId.Value);
             selectedCategoryName = selectedCategory?.CategoryName;
 
             var selectedCategoryInHierarchy = categoryHierarchy
@@ -52,7 +76,7 @@ public class CustomerMenuService
 
             if (hasChildren)
             {
-                var descendantIds = await _categoryService.GetDescendantCategoryIdsAsync(categoryId.Value, cancellationToken);
+                var descendantIds = GetDescendantCategoryIds(categoryId.Value, categoryDtos);
                 products = allProducts.Where(p => descendantIds.Contains(p.CategoryId)).ToList();
             }
             else
@@ -78,6 +102,24 @@ public class CustomerMenuService
         };
     }
 
+    private List<int> GetDescendantCategoryIds(int parentCategoryId, List<CategoryDto> allCategories)
+    {
+        var descendantIds = new List<int> { parentCategoryId };
+
+        void CollectChildren(int categoryId)
+        {
+            var children = allCategories.Where(c => c.ParentCategoryId == categoryId).ToList();
+            foreach (var child in children)
+            {
+                descendantIds.Add(child.CategoryId);
+                CollectChildren(child.CategoryId);
+            }
+        }
+
+        CollectChildren(parentCategoryId);
+        return descendantIds;
+    }
+
     private IEnumerable<CategoryDto> GetAllDescendants(CategoryDto category)
     {
         yield return category;
@@ -93,7 +135,36 @@ public class CustomerMenuService
     public async Task<MenuViewModel> GetCafeMenuAsync(CancellationToken cancellationToken = default)
     {
         var tenantId = _tenantResolver.GetCurrentTenantId();
-        var categoryHierarchy = await _categoryService.GetCategoryHierarchyAsync(cancellationToken);
+        
+        var allCategories = await _categoryRepository.GetAllForTenantAsync(tenantId, cancellationToken);
+        var categoryDtos = allCategories
+            .Where(c => !c.IsDeleted)
+            .Select(c => new CategoryDto
+            {
+                CategoryId = c.CategoryId,
+                CategoryName = c.CategoryName,
+                ParentCategoryId = c.ParentCategoryId,
+                ParentCategoryName = c.ParentCategory?.CategoryName,
+                Children = new List<CategoryDto>()
+            })
+            .ToList();
+
+        var categoryDict = categoryDtos.ToDictionary(c => c.CategoryId, c => c);
+        var rootCategories = new List<CategoryDto>();
+
+        foreach (var category in categoryDtos)
+        {
+            if (category.ParentCategoryId.HasValue && categoryDict.ContainsKey(category.ParentCategoryId.Value))
+            {
+                categoryDict[category.ParentCategoryId.Value].Children.Add(category);
+            }
+            else
+            {
+                rootCategories.Add(category);
+            }
+        }
+
+        var categoryHierarchy = rootCategories;
         var allProducts = await _productCacheService.GetProductsForTenantAsync(tenantId, false, cancellationToken);
 
         var menuCategories = new List<MenuCategoryViewModel>();

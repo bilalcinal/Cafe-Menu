@@ -3,6 +3,7 @@ using CafeMenu.Application.Interfaces.Services;
 using CafeMenu.Application.Models;
 using CafeMenu.Application.Models.ViewModels;
 using CafeMenu.Domain.Entities;
+using Microsoft.EntityFrameworkCore;
 
 namespace CafeMenu.Application.Services;
 
@@ -40,7 +41,12 @@ public class ProductService
     public async Task<ProductViewModel?> GetByIdAsync(int productId, CancellationToken cancellationToken = default)
     {
         var tenantId = _tenantResolver.GetCurrentTenantId();
-        var product = await _productRepository.GetByIdAsync(productId, tenantId, cancellationToken);
+        var product = await _productRepository
+            .Query()
+            .Include(p => p.Category)
+            .Include(p => p.ProductProperties)
+                .ThenInclude(pp => pp.Property)
+            .FirstOrDefaultAsync(p => p.ProductId == productId && p.TenantId == tenantId, cancellationToken);
 
         if (product == null || product.IsDeleted)
             return null;
@@ -91,39 +97,8 @@ public class ProductService
             IsDeleted = false
         };
 
-        var created = await _productRepository.AddAsync(product, cancellationToken);
-
-        foreach (var propertyId in viewModel.SelectedPropertyIds)
-        {
-            var productProperty = new ProductProperty
-            {
-                ProductId = created.ProductId,
-                PropertyId = propertyId
-            };
-            await _productPropertyRepository.AddAsync(productProperty, cancellationToken);
-        }
-
-        _productCacheService.InvalidateTenantCache(tenantId);
-
-        return created.ProductId;
-    }
-
-    public async Task UpdateAsync(ProductViewModel viewModel, CancellationToken cancellationToken = default)
-    {
-        var tenantId = _tenantResolver.GetCurrentTenantId();
-        var product = await _productRepository.GetByIdAsync(viewModel.ProductId, tenantId);
-
-        if (product == null || product.IsDeleted)
-            throw new InvalidOperationException("Ürün bulunamadı");
-
-        product.ProductName = viewModel.ProductName;
-        product.CategoryId = viewModel.CategoryId;
-        product.Price = viewModel.Price;
-        product.ImagePath = viewModel.ImagePath;
-
-        await _productRepository.UpdateAsync(product);
-
-        await _productPropertyRepository.DeleteByProductIdAsync(product.ProductId, cancellationToken);
+        await _productRepository.AddAsync(product, cancellationToken);
+        await _productRepository.SaveChangesAsync(cancellationToken);
 
         foreach (var propertyId in viewModel.SelectedPropertyIds)
         {
@@ -134,6 +109,47 @@ public class ProductService
             };
             await _productPropertyRepository.AddAsync(productProperty, cancellationToken);
         }
+        await _productPropertyRepository.SaveChangesAsync(cancellationToken);
+
+        _productCacheService.InvalidateTenantCache(tenantId);
+
+        return product.ProductId;
+    }
+
+    public async Task UpdateAsync(ProductViewModel viewModel, CancellationToken cancellationToken = default)
+    {
+        var tenantId = _tenantResolver.GetCurrentTenantId();
+        var product = await _productRepository
+            .Query()
+            .Include(p => p.Category)
+            .Include(p => p.ProductProperties)
+                .ThenInclude(pp => pp.Property)
+            .FirstOrDefaultAsync(p => p.ProductId == viewModel.ProductId && p.TenantId == tenantId, cancellationToken);
+
+        if (product == null || product.IsDeleted)
+            throw new InvalidOperationException("Ürün bulunamadı");
+
+        product.ProductName = viewModel.ProductName;
+        product.CategoryId = viewModel.CategoryId;
+        product.Price = viewModel.Price;
+        product.ImagePath = viewModel.ImagePath;
+
+        _productRepository.Update(product);
+        await _productRepository.SaveChangesAsync(cancellationToken);
+
+        await _productPropertyRepository.DeleteByProductIdAsync(product.ProductId, cancellationToken);
+        await _productPropertyRepository.SaveChangesAsync(cancellationToken);
+
+        foreach (var propertyId in viewModel.SelectedPropertyIds)
+        {
+            var productProperty = new ProductProperty
+            {
+                ProductId = product.ProductId,
+                PropertyId = propertyId
+            };
+            await _productPropertyRepository.AddAsync(productProperty, cancellationToken);
+        }
+        await _productPropertyRepository.SaveChangesAsync(cancellationToken);
 
         _productCacheService.InvalidateTenantCache(tenantId);
     }
@@ -141,7 +157,20 @@ public class ProductService
     public async Task DeleteAsync(int productId, CancellationToken cancellationToken = default)
     {
         var tenantId = _tenantResolver.GetCurrentTenantId();
-        await _productRepository.DeleteAsync(productId, tenantId, cancellationToken);
+        var product = await _productRepository
+            .Query()
+            .Include(p => p.Category)
+            .Include(p => p.ProductProperties)
+                .ThenInclude(pp => pp.Property)
+            .FirstOrDefaultAsync(p => p.ProductId == productId && p.TenantId == tenantId, cancellationToken);
+        
+        if (product != null)
+        {
+            product.SoftDelete();
+            _productRepository.Update(product);
+            await _productRepository.SaveChangesAsync(cancellationToken);
+        }
+        
         _productCacheService.InvalidateTenantCache(tenantId);
     }
 }

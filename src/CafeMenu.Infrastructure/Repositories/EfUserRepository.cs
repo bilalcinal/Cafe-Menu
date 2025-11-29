@@ -1,31 +1,24 @@
 using CafeMenu.Application.Interfaces.Repositories;
 using CafeMenu.Domain.Entities;
 using CafeMenu.Infrastructure.Persistence;
+using CafeMenu.Infrastructure.Repositories.Base;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using System.Data;
 
 namespace CafeMenu.Infrastructure.Repositories;
 
-public class EfUserRepository : IUserRepository
+public class EfUserRepository : GenericRepository<User, int>, IUserRepository
 {
-    private readonly CafeMenuDbContext _context;
-
     public EfUserRepository(CafeMenuDbContext context)
+        : base(context)
     {
-        _context = context;
     }
 
     public async Task<User?> GetByUserNameAsync(string userName, int tenantId, CancellationToken cancellationToken = default)
     {
-        return await _context.Users
+        return await Query()
             .FirstOrDefaultAsync(u => u.UserName == userName && u.TenantId == tenantId, cancellationToken);
-    }
-
-    public async Task<User?> GetByIdAsync(int userId, int tenantId, CancellationToken cancellationToken = default)
-    {
-        return await _context.Users
-            .FirstOrDefaultAsync(u => u.UserId == userId && u.TenantId == tenantId, cancellationToken);
     }
 
     public async Task<int> CreateUserWithHashAsync(string name, string surname, string userName, string plainPassword, int tenantId, int roleId, CancellationToken cancellationToken = default)
@@ -77,20 +70,15 @@ public class EfUserRepository : IUserRepository
 
     public async Task<IReadOnlyList<User>> GetAllForTenantAsync(int tenantId, CancellationToken cancellationToken = default)
     {
-        return await _context.Users
+        return await Query()
             .Where(u => u.TenantId == tenantId && !u.IsDeleted)
             .ToListAsync(cancellationToken);
     }
 
-    public async Task UpdateAsync(User user, CancellationToken cancellationToken = default)
-    {
-        _context.Users.Update(user);
-        await _context.SaveChangesAsync(cancellationToken);
-    }
-
     public async Task UpdatePasswordAsync(int userId, string plainPassword, int tenantId, CancellationToken cancellationToken = default)
     {
-        var user = await GetByIdAsync(userId, tenantId, cancellationToken);
+        var user = await Query()
+            .FirstOrDefaultAsync(u => u.UserId == userId && u.TenantId == tenantId, cancellationToken);
         if (user == null)
             throw new InvalidOperationException("Kullanıcı bulunamadı");
 

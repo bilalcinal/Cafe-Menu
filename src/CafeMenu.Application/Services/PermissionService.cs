@@ -1,6 +1,7 @@
 using CafeMenu.Application.Interfaces.Repositories;
 using CafeMenu.Application.Interfaces.Services;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
 namespace CafeMenu.Application.Services;
@@ -33,7 +34,9 @@ public class PermissionService : IPermissionService
     public async Task<bool> HasPermissionAsync(int userId, string permissionKey, CancellationToken cancellationToken = default)
     {
         var currentTenantId = GetCurrentTenantId();
-        var user = await _userRepository.GetByIdAsync(userId, currentTenantId, cancellationToken);
+        var user = await _userRepository
+            .Query()
+            .FirstOrDefaultAsync(u => u.UserId == userId && u.TenantId == currentTenantId, cancellationToken);
         if (user == null || user.IsDeleted)
         {
             if (currentTenantId == 1)
@@ -41,7 +44,9 @@ public class PermissionService : IPermissionService
                 var allTenants = await GetAllTenantsForUser(userId, cancellationToken);
                 foreach (var tenantId in allTenants)
                 {
-                    user = await _userRepository.GetByIdAsync(userId, tenantId, cancellationToken);
+                    user = await _userRepository
+                        .Query()
+                        .FirstOrDefaultAsync(u => u.UserId == userId && u.TenantId == tenantId, cancellationToken);
                     if (user != null && !user.IsDeleted)
                         break;
                 }
@@ -53,7 +58,9 @@ public class PermissionService : IPermissionService
         if (await IsSuperAdminAsync(userId, cancellationToken))
             return true;
 
-        var role = await _roleRepository.GetByIdAsync(user.RoleId, user.TenantId, cancellationToken);
+        var role = await _roleRepository
+            .Query()
+            .FirstOrDefaultAsync(r => r.RoleId == user.RoleId && r.TenantId == user.TenantId && !r.IsDeleted, cancellationToken);
         if (role == null)
             return false;
 
@@ -64,7 +71,9 @@ public class PermissionService : IPermissionService
     public async Task<IReadOnlyList<string>> GetUserPermissionsAsync(int userId, CancellationToken cancellationToken = default)
     {
         var currentTenantId = GetCurrentTenantId();
-        var user = await _userRepository.GetByIdAsync(userId, currentTenantId, cancellationToken);
+        var user = await _userRepository
+            .Query()
+            .FirstOrDefaultAsync(u => u.UserId == userId && u.TenantId == currentTenantId, cancellationToken);
         if (user == null || user.IsDeleted)
         {
             if (currentTenantId == 1)
@@ -72,7 +81,9 @@ public class PermissionService : IPermissionService
                 var allTenants = await GetAllTenantsForUser(userId, cancellationToken);
                 foreach (var tenantId in allTenants)
                 {
-                    user = await _userRepository.GetByIdAsync(userId, tenantId, cancellationToken);
+                    user = await _userRepository
+                        .Query()
+                        .FirstOrDefaultAsync(u => u.UserId == userId && u.TenantId == tenantId, cancellationToken);
                     if (user != null && !user.IsDeleted)
                         break;
                 }
@@ -87,7 +98,9 @@ public class PermissionService : IPermissionService
             return allPermissions.Select(p => p.Key).ToList();
         }
 
-        var role = await _roleRepository.GetByIdAsync(user.RoleId, user.TenantId, cancellationToken);
+        var role = await _roleRepository
+            .Query()
+            .FirstOrDefaultAsync(r => r.RoleId == user.RoleId && r.TenantId == user.TenantId && !r.IsDeleted, cancellationToken);
         if (role == null)
             return new List<string>();
 
@@ -106,14 +119,18 @@ public class PermissionService : IPermissionService
         if (user.TenantId != 1)
             return false;
 
-        var role = await _roleRepository.GetByIdAsync(user.RoleId, user.TenantId, cancellationToken);
+        var role = await _roleRepository
+            .Query()
+            .FirstOrDefaultAsync(r => r.RoleId == user.RoleId && r.TenantId == user.TenantId && !r.IsDeleted, cancellationToken);
         return role?.Name == "SuperAdmin";
     }
 
     private async Task<Domain.Entities.User?> GetUserFromAnyTenantAsync(int userId, CancellationToken cancellationToken)
     {
         var currentTenantId = GetCurrentTenantId();
-        var user = await _userRepository.GetByIdAsync(userId, currentTenantId, cancellationToken);
+        var user = await _userRepository
+            .Query()
+            .FirstOrDefaultAsync(u => u.UserId == userId && u.TenantId == currentTenantId, cancellationToken);
         if (user != null && !user.IsDeleted)
             return user;
 
@@ -122,7 +139,9 @@ public class PermissionService : IPermissionService
             var allTenants = await GetAllTenantsForUser(userId, cancellationToken);
             foreach (var tenantId in allTenants)
             {
-                user = await _userRepository.GetByIdAsync(userId, tenantId, cancellationToken);
+                user = await _userRepository
+                    .Query()
+                    .FirstOrDefaultAsync(u => u.UserId == userId && u.TenantId == tenantId, cancellationToken);
                 if (user != null && !user.IsDeleted)
                     return user;
             }

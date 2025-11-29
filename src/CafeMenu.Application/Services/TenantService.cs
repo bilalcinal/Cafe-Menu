@@ -56,8 +56,9 @@ public class TenantService
             CreatedDate = DateTime.UtcNow
         };
 
-        var created = await _tenantRepository.AddAsync(tenant, cancellationToken);
-        return created.TenantId;
+        await _tenantRepository.AddAsync(tenant, cancellationToken);
+        await _tenantRepository.SaveChangesAsync(cancellationToken);
+        return tenant.TenantId;
     }
 
     public async Task UpdateAsync(TenantViewModel viewModel, CancellationToken cancellationToken = default)
@@ -74,12 +75,18 @@ public class TenantService
         tenant.Code = viewModel.Code.ToUpperInvariant();
         tenant.IsActive = viewModel.IsActive;
 
-        await _tenantRepository.UpdateAsync(tenant);
+        _tenantRepository.Update(tenant);
+        await _tenantRepository.SaveChangesAsync(cancellationToken);
     }
 
     public async Task DeleteAsync(int tenantId, CancellationToken cancellationToken = default)
     {
-        await _tenantRepository.DeleteAsync(tenantId, cancellationToken);
+        var tenant = await _tenantRepository.GetByIdAsync(tenantId, cancellationToken);
+        if (tenant != null)
+        {
+            _tenantRepository.Remove(tenant);
+            await _tenantRepository.SaveChangesAsync(cancellationToken);
+        }
     }
 }
 

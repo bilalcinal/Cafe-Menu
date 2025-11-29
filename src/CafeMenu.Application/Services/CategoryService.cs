@@ -3,6 +3,7 @@ using CafeMenu.Application.Interfaces.Services;
 using CafeMenu.Application.Models;
 using CafeMenu.Application.Models.ViewModels;
 using CafeMenu.Domain.Entities;
+using Microsoft.EntityFrameworkCore;
 
 namespace CafeMenu.Application.Services;
 
@@ -39,7 +40,10 @@ public class CategoryService
     public async Task<CategoryViewModel?> GetByIdAsync(int categoryId, CancellationToken cancellationToken = default)
     {
         var tenantId = _tenantResolver.GetCurrentTenantId();
-        var category = await _categoryRepository.GetByIdAsync(categoryId, tenantId, cancellationToken);
+        var category = await _categoryRepository
+            .Query()
+            .Include(c => c.ParentCategory)
+            .FirstOrDefaultAsync(c => c.CategoryId == categoryId && c.TenantId == tenantId, cancellationToken);
 
         if (category == null || category.IsDeleted)
             return null;
@@ -68,14 +72,18 @@ public class CategoryService
             IsDeleted = false
         };
 
-        var created = await _categoryRepository.AddAsync(category, cancellationToken);
-        return created.CategoryId;
+        await _categoryRepository.AddAsync(category, cancellationToken);
+        await _categoryRepository.SaveChangesAsync(cancellationToken);
+        return category.CategoryId;
     }
 
     public async Task UpdateAsync(CategoryViewModel viewModel, CancellationToken cancellationToken = default)
     {
         var tenantId = _tenantResolver.GetCurrentTenantId();
-        var category = await _categoryRepository.GetByIdAsync(viewModel.CategoryId, tenantId);
+        var category = await _categoryRepository
+            .Query()
+            .Include(c => c.ParentCategory)
+            .FirstOrDefaultAsync(c => c.CategoryId == viewModel.CategoryId && c.TenantId == tenantId, cancellationToken);
 
         if (category == null || category.IsDeleted)
             throw new InvalidOperationException("Kategori bulunamadı");
@@ -83,13 +91,24 @@ public class CategoryService
         category.CategoryName = viewModel.CategoryName;
         category.ParentCategoryId = viewModel.ParentCategoryId;
 
-        await _categoryRepository.UpdateAsync(category);
+        _categoryRepository.Update(category);
+        await _categoryRepository.SaveChangesAsync(cancellationToken);
     }
 
     public async Task DeleteAsync(int categoryId, CancellationToken cancellationToken = default)
     {
         var tenantId = _tenantResolver.GetCurrentTenantId();
-        await _categoryRepository.DeleteAsync(categoryId, tenantId, cancellationToken);
+        var category = await _categoryRepository
+            .Query()
+            .Include(c => c.ParentCategory)
+            .FirstOrDefaultAsync(c => c.CategoryId == categoryId && c.TenantId == tenantId, cancellationToken);
+        
+        if (category != null)
+        {
+            category.SoftDelete();
+            _categoryRepository.Update(category);
+            await _categoryRepository.SaveChangesAsync(cancellationToken);
+        }
     }
 
     public async Task<IReadOnlyList<CategoryDto>> GetCategoryHierarchyAsync(CancellationToken cancellationToken = default)

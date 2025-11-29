@@ -3,6 +3,7 @@ using CafeMenu.Application.Interfaces.Services;
 using CafeMenu.Application.Models;
 using CafeMenu.Application.Models.ViewModels;
 using CafeMenu.Domain.Entities;
+using Microsoft.EntityFrameworkCore;
 
 namespace CafeMenu.Application.Services;
 
@@ -37,7 +38,9 @@ public class PropertyService
     public async Task<PropertyViewModel?> GetByIdAsync(int propertyId, CancellationToken cancellationToken = default)
     {
         var tenantId = _tenantResolver.GetCurrentTenantId();
-        var property = await _propertyRepository.GetByIdAsync(propertyId, tenantId, cancellationToken);
+        var property = await _propertyRepository
+            .Query()
+            .FirstOrDefaultAsync(p => p.PropertyId == propertyId && p.TenantId == tenantId, cancellationToken);
 
         if (property == null)
             return null;
@@ -61,14 +64,17 @@ public class PropertyService
             TenantId = tenantId
         };
 
-        var created = await _propertyRepository.AddAsync(property, cancellationToken);
-        return created.PropertyId;
+        await _propertyRepository.AddAsync(property, cancellationToken);
+        await _propertyRepository.SaveChangesAsync(cancellationToken);
+        return property.PropertyId;
     }
 
     public async Task UpdateAsync(PropertyViewModel viewModel, CancellationToken cancellationToken = default)
     {
         var tenantId = _tenantResolver.GetCurrentTenantId();
-        var property = await _propertyRepository.GetByIdAsync(viewModel.PropertyId, tenantId);
+        var property = await _propertyRepository
+            .Query()
+            .FirstOrDefaultAsync(p => p.PropertyId == viewModel.PropertyId && p.TenantId == tenantId, cancellationToken);
 
         if (property == null)
             throw new InvalidOperationException("Property bulunamadı");
@@ -76,13 +82,22 @@ public class PropertyService
         property.Key = viewModel.Key;
         property.Value = viewModel.Value;
 
-        await _propertyRepository.UpdateAsync(property);
+        _propertyRepository.Update(property);
+        await _propertyRepository.SaveChangesAsync(cancellationToken);
     }
 
     public async Task DeleteAsync(int propertyId, CancellationToken cancellationToken = default)
     {
         var tenantId = _tenantResolver.GetCurrentTenantId();
-        await _propertyRepository.DeleteAsync(propertyId, tenantId, cancellationToken);
+        var property = await _propertyRepository
+            .Query()
+            .FirstOrDefaultAsync(p => p.PropertyId == propertyId && p.TenantId == tenantId, cancellationToken);
+        
+        if (property != null)
+        {
+            _propertyRepository.Remove(property);
+            await _propertyRepository.SaveChangesAsync(cancellationToken);
+        }
     }
 }
 

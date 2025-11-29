@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
 namespace CafeMenu.Web.Controllers;
@@ -79,7 +80,9 @@ public class CustomerAccountController : Controller
 
         var tenantId = foundTenantId.Value;
 
-        var role = await _roleRepository.GetByIdAsync(user.RoleId, tenantId, cancellationToken);
+        var role = await _roleRepository
+            .Query()
+            .FirstOrDefaultAsync(r => r.RoleId == user.RoleId && r.TenantId == tenantId && !r.IsDeleted, cancellationToken);
         var roleName = role?.Name ?? string.Empty;
 
         var claims = new List<Claim>

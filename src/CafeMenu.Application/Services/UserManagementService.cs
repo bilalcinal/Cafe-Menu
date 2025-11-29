@@ -4,6 +4,7 @@ using CafeMenu.Application.Models;
 using CafeMenu.Application.Models.ViewModels;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 
 namespace CafeMenu.Application.Services;
 
@@ -11,20 +12,17 @@ public class UserManagementService
 {
     private readonly IUserRepository _userRepository;
     private readonly ITenantRepository _tenantRepository;
-    private readonly IUserService _userService;
     private readonly IRoleRepository _roleRepository;
     private readonly IHttpContextAccessor _httpContextAccessor;
 
     public UserManagementService(
         IUserRepository userRepository,
         ITenantRepository tenantRepository,
-        IUserService userService,
         IRoleRepository roleRepository,
         IHttpContextAccessor httpContextAccessor)
     {
         _userRepository = userRepository;
         _tenantRepository = tenantRepository;
-        _userService = userService;
         _roleRepository = roleRepository;
         _httpContextAccessor = httpContextAccessor;
     }
@@ -92,7 +90,9 @@ public class UserManagementService
 
     public async Task<UserViewModel?> GetByIdAsync(int userId, int tenantId, CancellationToken cancellationToken = default)
     {
-        var user = await _userRepository.GetByIdAsync(userId, tenantId, cancellationToken);
+        var user = await _userRepository
+            .Query()
+            .FirstOrDefaultAsync(u => u.UserId == userId && u.TenantId == tenantId, cancellationToken);
         if (user == null || user.IsDeleted)
             return null;
 
@@ -163,14 +163,16 @@ public class UserManagementService
         if (viewModel.RoleId <= 0)
             throw new InvalidOperationException("Rol seçimi gereklidir");
 
-        var role = await _roleRepository.GetByIdAsync(viewModel.RoleId, tenantId, cancellationToken);
+        var role = await _roleRepository
+            .Query()
+            .FirstOrDefaultAsync(r => r.RoleId == viewModel.RoleId && r.TenantId == tenantId && !r.IsDeleted, cancellationToken);
         if (role == null)
             throw new InvalidOperationException("Geçersiz rol");
 
         if (currentRole != "SuperAdmin" && role.Name == "SuperAdmin")
             throw new InvalidOperationException("SuperAdmin rolü sadece SuperAdmin tarafından atanabilir");
 
-        return await _userService.CreateUserAsync(
+        return await _userRepository.CreateUserWithHashAsync(
             viewModel.Name,
             viewModel.Surname,
             viewModel.UserName,
@@ -185,7 +187,9 @@ public class UserManagementService
         var currentRole = GetCurrentRole();
         var currentTenantId = GetCurrentTenantId();
 
-        var user = await _userRepository.GetByIdAsync(viewModel.UserId, viewModel.TenantId, cancellationToken);
+        var user = await _userRepository
+            .Query()
+            .FirstOrDefaultAsync(u => u.UserId == viewModel.UserId && u.TenantId == viewModel.TenantId, cancellationToken);
         if (user == null || user.IsDeleted)
             throw new InvalidOperationException("Kullanıcı bulunamadı");
 
@@ -199,7 +203,9 @@ public class UserManagementService
 
         if (viewModel.RoleId > 0)
         {
-            var role = await _roleRepository.GetByIdAsync(viewModel.RoleId, viewModel.TenantId, cancellationToken);
+            var role = await _roleRepository
+                .Query()
+                .FirstOrDefaultAsync(r => r.RoleId == viewModel.RoleId && r.TenantId == viewModel.TenantId && !r.IsDeleted, cancellationToken);
             if (role == null)
                 throw new InvalidOperationException("Geçersiz rol");
 
@@ -214,7 +220,8 @@ public class UserManagementService
         user.UserName = viewModel.UserName;
         user.TenantId = viewModel.TenantId;
 
-        await _userRepository.UpdateAsync(user, cancellationToken);
+        _userRepository.Update(user);
+        await _userRepository.SaveChangesAsync(cancellationToken);
 
         if (!string.IsNullOrWhiteSpace(viewModel.Password))
         {
@@ -224,11 +231,14 @@ public class UserManagementService
 
     public async Task DeleteAsync(int userId, int tenantId, CancellationToken cancellationToken = default)
     {
-        var user = await _userRepository.GetByIdAsync(userId, tenantId, cancellationToken);
+        var user = await _userRepository
+            .Query()
+            .FirstOrDefaultAsync(u => u.UserId == userId && u.TenantId == tenantId, cancellationToken);
         if (user != null)
         {
             user.SoftDelete();
-            await _userRepository.UpdateAsync(user, cancellationToken);
+            _userRepository.Update(user);
+            await _userRepository.SaveChangesAsync(cancellationToken);
         }
     }
 }

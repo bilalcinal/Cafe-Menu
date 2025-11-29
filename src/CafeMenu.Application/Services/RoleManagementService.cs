@@ -4,6 +4,7 @@ using CafeMenu.Application.Models;
 using CafeMenu.Application.Models.ViewModels;
 using CafeMenu.Domain.Entities;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
 namespace CafeMenu.Application.Services;
@@ -51,7 +52,14 @@ public class RoleManagementService
 
     public async Task<IReadOnlyList<RoleDto>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        var roles = await _roleRepository.GetAllAsync(cancellationToken);
+        var roles = await _roleRepository
+            .Query()
+            .Include(r => r.Tenant)
+            .Include(r => r.Users)
+            .Where(r => !r.IsDeleted)
+            .OrderBy(r => r.TenantId)
+            .ThenBy(r => r.Name)
+            .ToListAsync(cancellationToken);
         var tenants = await _tenantRepository.GetAllAsync(cancellationToken);
         var tenantMap = tenants.ToDictionary(t => t.TenantId, t => t.Name);
 
@@ -103,10 +111,14 @@ public class RoleManagementService
             };
         }
 
-        var role = await _roleRepository.GetByIdAsync(roleId, tenantId, cancellationToken);
+        var role = await _roleRepository
+            .Query()
+            .FirstOrDefaultAsync(r => r.RoleId == roleId && r.TenantId == tenantId && !r.IsDeleted, cancellationToken);
         if (role == null)
         {
-            role = await _roleRepository.GetByIdWithoutTenantAsync(roleId, cancellationToken);
+            role = await _roleRepository
+                .Query()
+                .FirstOrDefaultAsync(r => r.RoleId == roleId && !r.IsDeleted, cancellationToken);
             if (role == null)
                 return null;
         }
@@ -156,7 +168,9 @@ public class RoleManagementService
             IsDeleted = false
         };
 
-        var roleId = await _roleRepository.CreateAsync(role, cancellationToken);
+        await _roleRepository.AddAsync(role, cancellationToken);
+        await _roleRepository.SaveChangesAsync(cancellationToken);
+        var roleId = role.RoleId;
 
         await UpdateRolePermissionsAsync(roleId, viewModel.SelectedPermissionIds, cancellationToken);
 
@@ -178,7 +192,9 @@ public class RoleManagementService
 
     public async Task UpdateAsync(RoleViewModel viewModel, CancellationToken cancellationToken = default)
     {
-        var role = await _roleRepository.GetByIdAsync(viewModel.RoleId, viewModel.TenantId, cancellationToken);
+        var role = await _roleRepository
+            .Query()
+            .FirstOrDefaultAsync(r => r.RoleId == viewModel.RoleId && r.TenantId == viewModel.TenantId && !r.IsDeleted, cancellationToken);
         if (role == null)
             throw new InvalidOperationException("Rol bulunamadı");
 
@@ -187,14 +203,17 @@ public class RoleManagementService
 
         role.Name = viewModel.Name;
         role.IsActive = viewModel.IsActive;
-        await _roleRepository.UpdateAsync(role, cancellationToken);
+        _roleRepository.Update(role);
+        await _roleRepository.SaveChangesAsync(cancellationToken);
 
         await UpdateRolePermissionsAsync(viewModel.RoleId, viewModel.SelectedPermissionIds, cancellationToken);
     }
 
     public async Task DeleteAsync(int roleId, int tenantId, CancellationToken cancellationToken = default)
     {
-        var role = await _roleRepository.GetByIdAsync(roleId, tenantId, cancellationToken);
+        var role = await _roleRepository
+            .Query()
+            .FirstOrDefaultAsync(r => r.RoleId == roleId && r.TenantId == tenantId && !r.IsDeleted, cancellationToken);
         if (role == null)
             throw new InvalidOperationException("Rol bulunamadı");
 
@@ -205,12 +224,15 @@ public class RoleManagementService
         if (hasUsers)
             throw new InvalidOperationException("Bu role atanmış kullanıcılar olduğu için rol silinemez");
 
-        await _roleRepository.DeleteAsync(roleId, tenantId, cancellationToken);
+        role.SoftDelete();
+        _roleRepository.Update(role);
+        await _roleRepository.SaveChangesAsync(cancellationToken);
     }
 
     public async Task UpdateRolePermissionsAsync(int roleId, List<int> permissionIds, CancellationToken cancellationToken = default)
     {
         await _rolePermissionRepository.RemoveAllForRoleAsync(roleId, cancellationToken);
+        await _rolePermissionRepository.SaveChangesAsync(cancellationToken);
 
         foreach (var permissionId in permissionIds)
         {
@@ -221,6 +243,7 @@ public class RoleManagementService
             };
             await _rolePermissionRepository.AddAsync(rolePermission, cancellationToken);
         }
+        await _rolePermissionRepository.SaveChangesAsync(cancellationToken);
     }
 }
 
