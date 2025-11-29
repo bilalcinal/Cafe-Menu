@@ -115,7 +115,7 @@
                         <input type="hidden" name="returnUrl" value="@Context.Request.Query["ReturnUrl"]" />
                     }
                     
-                    <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
+                    <div asp-validation-summary="All" class="alert alert-danger validation-summary" role="alert"></div>
                     
                     <div class="mb-4">
                         <label for="UserName" class="form-label">
@@ -127,7 +127,7 @@
                                    autocomplete="username" required value="@Model.UserName" 
                                    placeholder="Kullanıcı adınızı girin" />
                         </div>
-                        <span asp-validation-for="UserName" class="text-danger small"></span>
+                        <span asp-validation-for="UserName" class="text-danger validation-message small"></span>
                     </div>
 
                     <div class="mb-4">
@@ -140,7 +140,7 @@
                                    autocomplete="current-password" required 
                                    placeholder="Şifrenizi girin" />
                         </div>
-                        <span asp-validation-for="Password" class="text-danger small"></span>
+                        <span asp-validation-for="Password" class="text-danger validation-message small"></span>
                     </div>
 
                     <div class="mb-4">

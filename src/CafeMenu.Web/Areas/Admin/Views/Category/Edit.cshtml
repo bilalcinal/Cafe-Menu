@@ -21,12 +21,12 @@
     <form asp-area="Admin" asp-controller="Category" asp-action="Edit" method="post" class="form-modern">
         @Html.AntiForgeryToken()
         <input type="hidden" asp-for="CategoryId" />
-        <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
+        <div asp-validation-summary="All" class="alert alert-danger validation-summary" role="alert"></div>
 
         <div class="mb-4">
             <label asp-for="CategoryName" class="form-label">Kategori Adı</label>
             <input asp-for="CategoryName" class="form-control" placeholder="Kategori adını girin" />
-            <span asp-validation-for="CategoryName" class="text-danger"></span>
+            <span asp-validation-for="CategoryName" class="text-danger validation-message"></span>
         </div>
 
         <div class="mb-4">

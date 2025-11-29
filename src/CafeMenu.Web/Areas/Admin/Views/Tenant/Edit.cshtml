@@ -21,19 +21,19 @@
     <form asp-area="Admin" asp-controller="Tenant" asp-action="Edit" method="post" class="form-modern">
         @Html.AntiForgeryToken()
         <input type="hidden" asp-for="TenantId" />
-        <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
+        <div asp-validation-summary="All" class="alert alert-danger validation-summary" role="alert"></div>
 
         <div class="mb-4">
             <label asp-for="Name" class="form-label">İşletme Adı</label>
             <input asp-for="Name" class="form-control" placeholder="İşletme adını girin" />
-            <span asp-validation-for="Name" class="text-danger"></span>
+            <span asp-validation-for="Name" class="text-danger validation-message"></span>
         </div>
 
         <div class="mb-4">
             <label asp-for="Code" class="form-label">İşletme Kodu</label>
             <input asp-for="Code" class="form-control" placeholder="İŞLETME_KODU" />
             <small class="text-muted">Büyük harf, rakam, tire ve alt çizgi kullanılabilir</small>
-            <span asp-validation-for="Code" class="text-danger"></span>
+            <span asp-validation-for="Code" class="text-danger validation-message"></span>
         </div>
 
         <div class="mb-4">

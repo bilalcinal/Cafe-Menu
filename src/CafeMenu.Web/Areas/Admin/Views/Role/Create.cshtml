@@ -20,7 +20,7 @@
 <div class="content-card">
     <form asp-area="Admin" asp-controller="Role" asp-action="Create" method="post" class="form-modern">
         @Html.AntiForgeryToken()
-        <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
+        <div asp-validation-summary="All" class="alert alert-danger validation-summary" role="alert"></div>
 
         @if (Model.AvailableTenants.Count > 1)
         {
@@ -33,7 +33,7 @@
                         <option value="@tenant.TenantId">@tenant.Name</option>
                     }
                 </select>
-                <span asp-validation-for="TenantId" class="text-danger"></span>
+                <span asp-validation-for="TenantId" class="text-danger validation-message"></span>
             </div>
         }
         else
@@ -44,7 +44,7 @@
         <div class="mb-4">
             <label asp-for="Name" class="form-label">Rol Adı</label>
             <input asp-for="Name" class="form-control" placeholder="Rol adını girin" />
-            <span asp-validation-for="Name" class="text-danger"></span>
+            <span asp-validation-for="Name" class="text-danger validation-message"></span>
         </div>
 
         <div class="mb-4">

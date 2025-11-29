@@ -532,6 +532,18 @@ body {
     opacity: 0.5;
 }
 
+.validation-message:empty {
+    display: none;
+}
+
+.validation-summary-valid {
+    display: none !important;
+}
+
+.validation-summary-errors {
+    display: block;
+}
+
 @media (max-width: 768px) {
     .admin-sidebar {
         transform: translateX(-100%);

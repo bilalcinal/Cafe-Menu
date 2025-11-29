@@ -20,21 +20,21 @@
 <div class="content-card">
     <form asp-area="Admin" asp-controller="User" asp-action="Create" method="post" class="form-modern">
         @Html.AntiForgeryToken()
-        <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
+        <div asp-validation-summary="All" class="alert alert-danger validation-summary" role="alert"></div>
 
         <div class="row">
             <div class="col-md-6">
                 <div class="mb-4">
                     <label asp-for="Name" class="form-label">Ad</label>
                     <input asp-for="Name" class="form-control" placeholder="Ad girin" />
-                    <span asp-validation-for="Name" class="text-danger"></span>
+                    <span asp-validation-for="Name" class="text-danger validation-message"></span>
                 </div>
             </div>
             <div class="col-md-6">
                 <div class="mb-4">
                     <label asp-for="Surname" class="form-label">Soyad</label>
                     <input asp-for="Surname" class="form-control" placeholder="Soyad girin" />
-                    <span asp-validation-for="Surname" class="text-danger"></span>
+                    <span asp-validation-for="Surname" class="text-danger validation-message"></span>
                 </div>
             </div>
         </div>
@@ -42,14 +42,14 @@
         <div class="mb-4">
             <label asp-for="UserName" class="form-label">Kullanıcı Adı</label>
             <input asp-for="UserName" class="form-control" placeholder="Kullanıcı adı girin" />
-            <span asp-validation-for="UserName" class="text-danger"></span>
+            <span asp-validation-for="UserName" class="text-danger validation-message"></span>
         </div>
 
         <div class="mb-4">
             <label asp-for="Password" class="form-label">Şifre</label>
             <input asp-for="Password" class="form-control" type="password" placeholder="Şifre girin" />
             <small class="text-muted">En az 6 karakter olmalıdır</small>
-            <span asp-validation-for="Password" class="text-danger"></span>
+            <span asp-validation-for="Password" class="text-danger validation-message"></span>
         </div>
 
         @if (Model.AvailableTenants.Count > 1)
@@ -59,7 +59,7 @@
                 <select asp-for="TenantId" class="form-select" id="tenantSelect" asp-items="@(new SelectList(Model.AvailableTenants, "TenantId", "Name"))">
                     <option value="">İşletme Seçiniz</option>
                 </select>
-                <span asp-validation-for="TenantId" class="text-danger"></span>
+                <span asp-validation-for="TenantId" class="text-danger validation-message"></span>
             </div>
         }
         else
@@ -76,7 +76,7 @@
                     <option value="@role.RoleId" data-tenant-id="@role.TenantId">@role.Name</option>
                 }
             </select>
-            <span asp-validation-for="RoleId" class="text-danger"></span>
+            <span asp-validation-for="RoleId" class="text-danger validation-message"></span>
         </div>
 
         <div class="d-flex gap-2 justify-content-end">
