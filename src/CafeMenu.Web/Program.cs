@@ -7,6 +7,7 @@ using CafeMenu.Infrastructure.SeedData;
 using CafeMenu.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,6 +21,8 @@ builder.Services.AddDbContext<CafeMenuDbContext>(options =>
 
 builder.Services.AddMemoryCache();
 
+builder.Services.AddHttpClient();
+
 builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromHours(8);
@@ -27,7 +30,7 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
-builder.Services.AddScoped<ICurrencyService, CurrencyService>();
+builder.Services.AddHttpClient<ICurrencyService, CurrencyService>();
 
 builder.Services.AddScoped<ICategoryRepository, EfCategoryRepository>();
 builder.Services.AddScoped<IProductRepository, EfProductRepository>();

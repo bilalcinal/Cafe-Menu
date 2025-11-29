@@ -4,28 +4,32 @@
     Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
 }
 
-<div class="page-header">
+<div class="page-header mb-4">
     <div>
-        <h1 class="page-title">Dashboard</h1>
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb breadcrumb-custom">
-                <li class="breadcrumb-item"><a href="/Admin/Dashboard">Admin</a></li>
-                <li class="breadcrumb-item active">Dashboard</li>
-            </ol>
-        </nav>
+        <h1 class="page-title">Yönetim Paneli</h1>
+        <p class="text-muted mb-0">Genel durum ve hızlı özet.</p>
     </div>
 </div>
 
 <div class="row">
-    <div class="col-lg-6 col-md-12 mb-4">
-        <div class="dashboard-widget">
-            <div class="dashboard-widget-header">
-                <h5 class="dashboard-widget-title">
-                    <i class="bi bi-bar-chart-fill me-2 text-primary"></i>Kategoriye Göre Ürün Sayısı
+    <div class="col-lg-8 mb-4">
+        <div class="content-card h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0">
+                    <i class="bi bi-bar-chart me-2 text-primary"></i>
+                    Kategoriye Göre Ürün Sayısı
                 </h5>
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="refreshProductWidget">
+                    <i class="bi bi-arrow-clockwise me-1"></i>Yenile
+                </button>
             </div>
+
+            <div id="product-widget-loading" class="text-muted small mb-2">
+                Yükleniyor...
+            </div>
+
             <div class="table-responsive">
-                <table class="table table-modern">
+                <table class="table table-modern mb-0" id="product-widget-table">
                     <thead>
                         <tr>
                             <th>Kategori</th>
@@ -33,26 +37,12 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @if (Model.ProductCountByCategory.Any())
-                        {
-                            @foreach (var item in Model.ProductCountByCategory.OrderByDescending(x => x.Value))
-                            {
-                                <tr>
-                                    <td>
-                                        <i class="bi bi-folder me-2 text-primary"></i>@item.Key
-                                    </td>
-                                    <td class="text-end">
-                                        <span class="badge bg-primary rounded-pill px-3 py-2">@item.Value</span>
-                                    </td>
-                                </tr>
-                            }
-                        }
-                        else
+                        @foreach (var item in Model.CategoryProductCounts)
                         {
                             <tr>
-                                <td colspan="2" class="text-center text-muted py-4">
-                                    <i class="bi bi-inbox d-block mb-2" style="font-size: 2rem;"></i>
-                                    Veri bulunamadı
+                                <td>@item.CategoryName</td>
+                                <td class="text-end">
+                                    <span class="badge bg-primary">@item.ProductCount</span>
                                 </td>
                             </tr>
                         }
@@ -62,42 +52,40 @@
         </div>
     </div>
 
-    <div class="col-lg-6 col-md-12 mb-4">
-        <div class="dashboard-widget">
-            <div class="dashboard-widget-header">
-                <h5 class="dashboard-widget-title">
-                    <i class="bi bi-currency-exchange me-2 text-success"></i>Döviz Kurları
+    <div class="col-lg-4 mb-4">
+        <div class="content-card h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0">
+                    <i class="bi bi-currency-exchange me-2 text-success"></i>
+                    Güncel Kur Bilgisi
                 </h5>
-                <span class="badge bg-success" id="currencyStatus">
-                    <i class="bi bi-check-circle me-1"></i>Aktif
+                <span class="badge bg-light text-muted" id="currency-last-update">
+                    -
                 </span>
             </div>
-            <div class="currency-widget">
-                <div class="currency-item">
-                    <div>
-                        <div class="currency-label">TRY (Türk Lirası)</div>
-                        <div class="text-muted small">Base Currency</div>
-                    </div>
-                    <div class="currency-value">@Model.CurrencyRates.TryRate.ToString("N4")</div>
+
+            <div id="currency-widget-loading" class="text-muted small mb-2">
+                Yükleniyor...
+            </div>
+
+            <div class="d-flex flex-column gap-2">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span>USD / TRY</span>
+                    <span class="fw-semibold" id="usd-rate">-</span>
                 </div>
-                <div class="currency-item">
-                    <div>
-                        <div class="currency-label">USD (Amerikan Doları)</div>
-                        <div class="text-muted small">US Dollar</div>
-                    </div>
-                    <div class="currency-value" id="usdRate">@Model.CurrencyRates.UsdRate.ToString("N4")</div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span>EUR / TRY</span>
+                    <span class="fw-semibold" id="eur-rate">-</span>
                 </div>
-                <div class="currency-item">
-                    <div>
-                        <div class="currency-label">EUR (Euro)</div>
-                        <div class="text-muted small">Euro</div>
-                    </div>
-                    <div class="currency-value" id="eurRate">@Model.CurrencyRates.EurRate.ToString("N4")</div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span>TRY</span>
+                    <span class="fw-semibold" id="try-rate">-</span>
                 </div>
-                <div class="currency-update">
-                    <i class="bi bi-clock me-1"></i>
-                    Son Güncelleme: <span id="lastUpdated">@Model.CurrencyRates.LastUpdated.ToString("HH:mm:ss")</span>
-                </div>
+            </div>
+
+            <div class="mt-3 text-muted small">
+                Kur bilgisi <code>http://any.kur.com/kurlar</code> üzerinden alınmaktadır
+                ve her 10 saniyede bir yenilenmektedir.
             </div>
         </div>
     </div>
@@ -105,33 +93,104 @@
 
 @section Scripts {
     <script>
-        let currencyUpdateInterval;
+        async function loadProductWidget() {
+            const loading = document.getElementById('product-widget-loading');
+            const tbody = document.querySelector('#product-widget-table tbody');
+            if (!tbody) return;
 
-        function updateCurrencyRates() {
-            fetch('/Admin/Dashboard/GetRates')
-                .then(response => {
-                    if (!response.ok) throw new Error('Network response was not ok');
-                    return response.json();
-                })
-                .then(data => {
-                    document.getElementById('usdRate').textContent = parseFloat(data.usdRate).toFixed(4);
-                    document.getElementById('eurRate').textContent = parseFloat(data.eurRate).toFixed(4);
-                    const lastUpdated = new Date(data.lastUpdated);
-                    document.getElementById('lastUpdated').textContent = lastUpdated.toLocaleTimeString('tr-TR');
-                    document.getElementById('currencyStatus').innerHTML = '<i class="bi bi-check-circle me-1"></i>Aktif';
-                })
-                .catch(error => {
-                    console.error('Kur bilgisi alınamadı:', error);
-                    document.getElementById('currencyStatus').innerHTML = '<i class="bi bi-x-circle me-1"></i>Hata';
-                });
+            loading.textContent = 'Yükleniyor...';
+
+            try {
+                const response = await fetch('/Admin/Dashboard/ProductCountWidget');
+                if (!response.ok) throw new Error('İstek başarısız oldu');
+
+                const data = await response.json();
+                tbody.innerHTML = '';
+
+                if (!data || data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="2" class="text-muted">Kayıt bulunamadı.</td></tr>';
+                } else {
+                    data.forEach(item => {
+                        const tr = document.createElement('tr');
+
+                        const tdCat = document.createElement('td');
+                        tdCat.textContent = item.categoryName;
+
+                        const tdCount = document.createElement('td');
+                        tdCount.classList.add('text-end');
+                        tdCount.innerHTML = `<span class="badge bg-primary">${item.productCount}</span>`;
+
+                        tr.appendChild(tdCat);
+                        tr.appendChild(tdCount);
+                        tbody.appendChild(tr);
+                    });
+                }
+
+                loading.textContent = '';
+            } catch (e) {
+                loading.textContent = 'Kategori verileri yüklenirken bir hata oluştu.';
+            }
         }
 
-        currencyUpdateInterval = setInterval(updateCurrencyRates, 10000);
+        async function loadCurrencyWidget() {
+            const loading = document.getElementById('currency-widget-loading');
+            const usd = document.getElementById('usd-rate');
+            const eur = document.getElementById('eur-rate');
+            const tl = document.getElementById('try-rate');
+            const lastUpdate = document.getElementById('currency-last-update');
 
-        window.addEventListener('beforeunload', function() {
-            if (currencyUpdateInterval) {
-                clearInterval(currencyUpdateInterval);
+            if (loading) loading.textContent = 'Yükleniyor...';
+
+            try {
+                const response = await fetch('/Admin/Dashboard/CurrencyWidget');
+                if (!response.ok) throw new Error('İstek başarısız oldu');
+
+                const data = await response.json();
+
+                if (usd) usd.textContent = typeof data.usd === 'number'
+                    ? data.usd.toFixed(4)
+                    : data.usd ?? '-';
+
+                if (eur) eur.textContent = typeof data.eur === 'number'
+                    ? data.eur.toFixed(4)
+                    : data.eur ?? '-';
+
+                if (tl) tl.textContent = typeof data.try === 'number'
+                    ? data.try.toFixed(4)
+                    : data.try ?? '-';
+
+                if (lastUpdate) {
+                    if (data.fetchedAt) {
+                        // Sunucudan gelen "dd.MM.yyyy HH:mm:ss"
+                        lastUpdate.textContent = data.fetchedAt;
+                    } else {
+                        // Yine de her çağrıda client saatine göre güncelle
+                        lastUpdate.textContent = new Date().toLocaleString('tr-TR', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            second: '2-digit'
+                        });
+                    }
+                }
+
+                if (loading) loading.textContent = '';
+            } catch (e) {
+                if (loading) loading.textContent = 'Kur bilgisi yüklenirken bir hata oluştu.';
+                console.error('Currency widget error:', e);
             }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            loadProductWidget();
+            loadCurrencyWidget();
+
+            document.getElementById('refreshProductWidget')
+                ?.addEventListener('click', loadProductWidget);
+
+            setInterval(loadCurrencyWidget, 10000);
         });
     </script>
 }
