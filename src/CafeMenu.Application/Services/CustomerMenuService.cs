@@ -89,5 +89,84 @@ public class CustomerMenuService
             }
         }
     }
+
+    public async Task<MenuViewModel> GetCafeMenuAsync(CancellationToken cancellationToken = default)
+    {
+        var tenantId = _tenantResolver.GetCurrentTenantId();
+        var categoryHierarchy = await _categoryService.GetCategoryHierarchyAsync(cancellationToken);
+        var allProducts = await _productCacheService.GetProductsForTenantAsync(tenantId, false, cancellationToken);
+
+        var menuCategories = new List<MenuCategoryViewModel>();
+
+        foreach (var category in categoryHierarchy)
+        {
+            var categoryProducts = allProducts.Where(p => p.CategoryId == category.CategoryId).ToList();
+            var subCategories = new List<MenuCategoryViewModel>();
+
+            foreach (var subCategory in category.Children)
+            {
+                var subCategoryProducts = allProducts.Where(p => p.CategoryId == subCategory.CategoryId).ToList();
+                var grandSubCategories = new List<MenuCategoryViewModel>();
+
+                foreach (var grandSubCategory in subCategory.Children)
+                {
+                    var grandSubCategoryProducts = allProducts.Where(p => p.CategoryId == grandSubCategory.CategoryId).ToList();
+                    grandSubCategories.Add(new MenuCategoryViewModel
+                    {
+                        CategoryId = grandSubCategory.CategoryId,
+                        CategoryName = grandSubCategory.CategoryName,
+                        ParentCategoryId = grandSubCategory.ParentCategoryId,
+                        Products = grandSubCategoryProducts.Select(p => new MenuProductViewModel
+                        {
+                            ProductId = p.ProductId,
+                            ProductName = p.ProductName,
+                            Price = p.Price,
+                            ImagePath = p.ImagePath,
+                            Badges = p.Properties.Select(prop => $"{prop.Key}: {prop.Value}").ToList()
+                        }).ToList()
+                    });
+                }
+
+                subCategories.Add(new MenuCategoryViewModel
+                {
+                    CategoryId = subCategory.CategoryId,
+                    CategoryName = subCategory.CategoryName,
+                    ParentCategoryId = subCategory.ParentCategoryId,
+                    SubCategories = grandSubCategories,
+                    Products = subCategoryProducts.Select(p => new MenuProductViewModel
+                    {
+                        ProductId = p.ProductId,
+                        ProductName = p.ProductName,
+                        Price = p.Price,
+                        ImagePath = p.ImagePath,
+                        Badges = p.Properties.Select(prop => $"{prop.Key}: {prop.Value}").ToList()
+                    }).ToList()
+                });
+            }
+
+            menuCategories.Add(new MenuCategoryViewModel
+            {
+                CategoryId = category.CategoryId,
+                CategoryName = category.CategoryName,
+                ParentCategoryId = category.ParentCategoryId,
+                SubCategories = subCategories,
+                Products = categoryProducts.Select(p => new MenuProductViewModel
+                {
+                    ProductId = p.ProductId,
+                    ProductName = p.ProductName,
+                    Price = p.Price,
+                    ImagePath = p.ImagePath,
+                    Badges = p.Properties.Select(prop => $"{prop.Key}: {prop.Value}").ToList()
+                }).ToList()
+            });
+        }
+
+        return new MenuViewModel
+        {
+            TenantId = tenantId,
+            TenantName = string.Empty,
+            Categories = menuCategories
+        };
+    }
 }
 

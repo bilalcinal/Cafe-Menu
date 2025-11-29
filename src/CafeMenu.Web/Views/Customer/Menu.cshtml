@@ -1,0 +1,295 @@
+@model CafeMenu.Application.Models.ViewModels.MenuViewModel
+@{
+    ViewData["Title"] = "Menü";
+    Layout = "_CustomerLayout";
+}
+
+<div class="menu-container">
+    <div class="menu-header text-center mb-5">
+        <h1 class="menu-title">@Model.TenantName</h1>
+        <p class="menu-subtitle">Menü</p>
+        <div class="menu-actions mt-4">
+            <a asp-controller="Customer" asp-action="DownloadPdf" class="btn btn-customer-pdf">
+                <i class="bi bi-download me-2"></i>PDF Olarak İndir
+            </a>
+        </div>
+    </div>
+
+    <div class="menu-content">
+        @if (Model.Categories.Any())
+        {
+            @foreach (var category in Model.Categories)
+            {
+                <div class="menu-category-section mb-5">
+                    <div class="category-header">
+                        <h2 class="category-title">@category.CategoryName</h2>
+                        <div class="category-divider"></div>
+                    </div>
+
+                    @if (category.SubCategories.Any())
+                    {
+                        @foreach (var subCategory in category.SubCategories)
+                        {
+                            <div class="subcategory-section mt-4">
+                                <h3 class="subcategory-title">@subCategory.CategoryName</h3>
+
+                                @if (subCategory.SubCategories.Any())
+                                {
+                                    @foreach (var grandSubCategory in subCategory.SubCategories)
+                                    {
+                                        <div class="grandsubcategory-section mt-3">
+                                            <h4 class="grandsubcategory-title">@grandSubCategory.CategoryName</h4>
+                                            <div class="products-list mt-3">
+                                                @foreach (var product in grandSubCategory.Products)
+                                                {
+                                                    @await Html.PartialAsync("_MenuProductItem", product)
+                                                }
+                                            </div>
+                                        </div>
+                                    }
+                                }
+
+                                <div class="products-list mt-3">
+                                    @foreach (var product in subCategory.Products)
+                                    {
+                                        @await Html.PartialAsync("_MenuProductItem", product)
+                                    }
+                                </div>
+                            </div>
+                        }
+                    }
+
+                    <div class="products-list mt-4">
+                        @foreach (var product in category.Products)
+                        {
+                            @await Html.PartialAsync("_MenuProductItem", product)
+                        }
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="empty-menu text-center py-5">
+                <i class="bi bi-inbox" style="font-size: 4rem; color: #ccc; margin-bottom: 1rem;"></i>
+                <h4>Menü henüz hazırlanmamış</h4>
+                <p class="text-muted">Bu kafede henüz ürün bulunmamaktadır.</p>
+            </div>
+        }
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .menu-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        .menu-header {
+            padding-bottom: 2rem;
+            border-bottom: 3px solid var(--customer-primary);
+        }
+
+        .menu-title {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--customer-primary);
+            margin-bottom: 0.5rem;
+            letter-spacing: 2px;
+        }
+
+        .menu-subtitle {
+            font-size: 1.25rem;
+            color: var(--customer-secondary);
+            font-style: italic;
+            margin-bottom: 0;
+        }
+
+        .btn-customer-pdf {
+            background: linear-gradient(135deg, var(--customer-primary) 0%, var(--customer-primary-dark) 100%);
+            border: none;
+            color: white;
+            font-weight: 600;
+            padding: 0.75rem 2rem;
+            border-radius: 8px;
+            transition: all 0.3s;
+            box-shadow: 0 2px 8px rgba(212, 165, 116, 0.3);
+        }
+
+        .btn-customer-pdf:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(212, 165, 116, 0.4);
+            color: white;
+        }
+
+        .menu-category-section {
+            page-break-inside: avoid;
+        }
+
+        .category-header {
+            margin-bottom: 1.5rem;
+        }
+
+        .category-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--customer-text);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .category-divider {
+            height: 3px;
+            background: linear-gradient(to right, var(--customer-primary), transparent);
+            margin-top: 0.5rem;
+        }
+
+        .subcategory-section {
+            margin-left: 1.5rem;
+        }
+
+        .subcategory-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--customer-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .grandsubcategory-section {
+            margin-left: 1.5rem;
+        }
+
+        .grandsubcategory-title {
+            font-size: 1.25rem;
+            font-weight: 500;
+            color: var(--customer-text);
+            margin-bottom: 0.5rem;
+            font-style: italic;
+        }
+
+        .products-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .menu-product-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 1rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+            gap: 1rem;
+        }
+
+        .menu-product-item:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+        }
+
+        .product-image-wrapper {
+            flex-shrink: 0;
+        }
+
+        .product-thumbnail {
+            width: 64px;
+            height: 64px;
+            object-fit: cover;
+            border: 2px solid var(--customer-bg);
+        }
+
+        .product-thumbnail-placeholder {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, #f5e6d3 0%, #d4a574 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255,255,255,0.7);
+            font-size: 1.5rem;
+            border: 2px solid var(--customer-bg);
+        }
+
+        .product-info {
+            flex: 1;
+            padding-right: 1rem;
+        }
+
+        .product-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--customer-text);
+            margin-bottom: 0.25rem;
+        }
+
+        .product-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .product-badge {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.75rem;
+            background-color: var(--customer-bg);
+            color: var(--customer-primary);
+            border-radius: 12px;
+            font-weight: 500;
+        }
+
+        .product-price {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--customer-primary);
+            white-space: nowrap;
+        }
+
+        @@media (max-width: 768px) {
+            .menu-container {
+                padding: 1rem 0.5rem;
+            }
+
+            .menu-title {
+                font-size: 2rem;
+            }
+
+            .category-title {
+                font-size: 1.5rem;
+            }
+
+            .menu-product-item {
+                flex-direction: row;
+            }
+
+            .product-thumbnail,
+            .product-thumbnail-placeholder {
+                width: 48px;
+                height: 48px;
+            }
+
+            .product-price {
+                margin-top: 0.5rem;
+                align-self: flex-start;
+            }
+        }
+
+        @@media print {
+            .menu-actions {
+                display: none;
+            }
+
+            .menu-container {
+                max-width: 100%;
+            }
+        }
+    </style>
+}
+

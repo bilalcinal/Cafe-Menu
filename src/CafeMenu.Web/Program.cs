@@ -43,6 +43,7 @@ builder.Services.AddScoped<IProductCacheService, ProductCacheService>();
 builder.Services.AddScoped<ITenantResolver, TenantResolver>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IPermissionService, PermissionService>();
+builder.Services.AddScoped<IMenuPdfService, MenuPdfService>();
 
 builder.Services.AddScoped<CustomerMenuService>();
 builder.Services.AddScoped<CategoryService>();

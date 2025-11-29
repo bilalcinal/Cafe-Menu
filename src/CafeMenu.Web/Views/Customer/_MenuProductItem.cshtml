@@ -1,0 +1,32 @@
+@model CafeMenu.Application.Models.ViewModels.MenuProductViewModel
+
+<div class="menu-product-item">
+    <div class="product-image-wrapper">
+        @if (!string.IsNullOrEmpty(Model.ImagePath))
+        {
+            <img src="@Model.ImagePath" alt="@Model.ProductName" class="product-thumbnail img-fluid rounded" />
+        }
+        else
+        {
+            <div class="product-thumbnail-placeholder">
+                <i class="bi bi-image"></i>
+            </div>
+        }
+    </div>
+    <div class="product-info">
+        <div class="product-name">@Model.ProductName</div>
+        @if (Model.Badges.Any())
+        {
+            <div class="product-badges">
+                @foreach (var badge in Model.Badges)
+                {
+                    <span class="product-badge">@badge</span>
+                }
+            </div>
+        }
+    </div>
+    <div class="product-price">
+        @Model.Price.ToString("N2") ₺
+    </div>
+</div>
+

@@ -45,5 +45,49 @@ public class CustomerController : Controller
         var viewModel = await _customerMenuService.GetMenuAsync(categoryId, cancellationToken);
         return View(viewModel);
     }
+
+    [RequirePermission("Customer.Menu.View")]
+    public async Task<IActionResult> Menu(CancellationToken cancellationToken = default)
+    {
+        var tenantId = _tenantResolver.GetCurrentTenantId();
+        var tenant = await _tenantRepository.GetByIdAsync(tenantId, cancellationToken);
+
+        if (tenant == null)
+        {
+            return NotFound();
+        }
+
+        var userName = User.FindFirst(ClaimTypes.Name)?.Value ?? string.Empty;
+
+        ViewBag.TenantName = tenant.Name;
+        ViewBag.TenantCode = tenant.Code;
+        ViewBag.UserName = userName;
+
+        var viewModel = await _customerMenuService.GetCafeMenuAsync(cancellationToken);
+        viewModel.TenantName = tenant.Name;
+
+        return View(viewModel);
+    }
+
+    [RequirePermission("Customer.Menu.View")]
+    public async Task<IActionResult> DownloadPdf(CancellationToken cancellationToken = default)
+    {
+        var tenantId = _tenantResolver.GetCurrentTenantId();
+        var tenant = await _tenantRepository.GetByIdAsync(tenantId, cancellationToken);
+
+        if (tenant == null)
+        {
+            return NotFound();
+        }
+
+        var menuData = await _customerMenuService.GetCafeMenuAsync(cancellationToken);
+        menuData.TenantName = tenant.Name;
+
+        var pdfService = HttpContext.RequestServices.GetRequiredService<IMenuPdfService>();
+        var pdfBytes = await pdfService.GenerateMenuPdfAsync(menuData, cancellationToken);
+
+        var fileName = $"{tenant.Name}_Menu_{DateTime.Now:yyyyMMdd}.pdf";
+        return File(pdfBytes, "application/pdf", fileName);
+    }
 }
 
