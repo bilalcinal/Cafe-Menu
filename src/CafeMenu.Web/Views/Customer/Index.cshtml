@@ -1,6 +1,7 @@
 @model CafeMenu.Application.Models.ViewModels.CustomerMenuViewModel
 @{
     ViewData["Title"] = "Menü";
+    Layout = "_CustomerLayout";
 }
 
 <div class="row">
@@ -9,13 +10,13 @@
             <h5 class="mb-3 fw-bold">
                 <i class="bi bi-list-ul me-2"></i>Kategoriler
             </h5>
-            <a href="/Customer?tenantId=@Model.TenantId" 
+            <a asp-controller="Customer" asp-action="Index" 
                class="category-item @(Model.SelectedCategoryId == null ? "active" : "")">
                 <i class="bi bi-grid me-2"></i>Tümü
             </a>
             @foreach (var category in Model.Categories)
             {
-                <a href="/Customer?categoryId=@category.CategoryId&tenantId=@Model.TenantId" 
+                <a asp-controller="Customer" asp-action="Index" asp-route-categoryId="@category.CategoryId"
                    class="category-item @(Model.SelectedCategoryId == category.CategoryId ? "active" : "")">
                     <i class="bi bi-tag me-2"></i>@category.CategoryName
                 </a>
@@ -79,10 +80,13 @@
                                 <div class="price-primary">
                                     <i class="bi bi-currency-exchange me-1"></i>@product.Price.ToString("N2") ₺
                                 </div>
-                                <div class="price-secondary">
-                                    <span><i class="bi bi-currency-dollar me-1"></i>@((product.Price / Model.CurrencyRates.UsdRate).ToString("N2"))</span>
-                                    <span><i class="bi bi-currency-euro me-1"></i>@((product.Price / Model.CurrencyRates.EurRate).ToString("N2"))</span>
-                                </div>
+                                @if (Model.CurrencyRates != null && Model.CurrencyRates.UsdRate > 0 && Model.CurrencyRates.EurRate > 0)
+                                {
+                                    <div class="price-secondary">
+                                        <span><i class="bi bi-currency-dollar me-1"></i>@((product.Price / Model.CurrencyRates.UsdRate).ToString("N2"))</span>
+                                        <span><i class="bi bi-currency-euro me-1"></i>@((product.Price / Model.CurrencyRates.EurRate).ToString("N2"))</span>
+                                    </div>
+                                }
                             </div>
                         </div>
                     </div>

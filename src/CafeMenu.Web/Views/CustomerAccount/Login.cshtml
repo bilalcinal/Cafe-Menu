@@ -1,0 +1,168 @@
+@model CafeMenu.Application.Models.ViewModels.LoginViewModel
+@{
+    ViewData["Title"] = "Giriş Yap";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Cafe Menu</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <style>
+        :root {
+            --customer-primary: #d4a574;
+            --customer-primary-dark: #b8935f;
+        }
+
+        .login-page {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #f5e6d3 0%, #d4a574 100%);
+            padding: 2rem;
+        }
+
+        .login-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            max-width: 450px;
+            width: 100%;
+        }
+
+        .login-header {
+            background: linear-gradient(135deg, var(--customer-primary) 0%, var(--customer-primary-dark) 100%);
+            color: white;
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+
+        .login-body {
+            padding: 2.5rem;
+        }
+
+        .login-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.9;
+        }
+
+        .form-control:focus {
+            border-color: var(--customer-primary);
+            box-shadow: 0 0 0 0.2rem rgba(212, 165, 116, 0.25);
+        }
+
+        .btn-login {
+            background: linear-gradient(135deg, var(--customer-primary) 0%, var(--customer-primary-dark) 100%);
+            border: none;
+            color: white;
+            font-weight: 600;
+            padding: 0.75rem;
+            border-radius: 10px;
+            transition: all 0.3s;
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(212, 165, 116, 0.4);
+            color: white;
+        }
+
+        .form-label {
+            font-weight: 500;
+            color: #555;
+            margin-bottom: 0.5rem;
+        }
+
+        .input-group-icon {
+            position: relative;
+        }
+
+        .input-group-icon i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+            z-index: 10;
+        }
+
+        .input-group-icon input {
+            padding-left: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-page">
+        <div class="login-card">
+            <div class="login-header">
+                <i class="bi bi-cup-hot login-icon"></i>
+                <h3 class="mb-2">Hoş Geldiniz</h3>
+                <p class="mb-0 opacity-75">Cafe Menü Sistemine Giriş Yapın</p>
+            </div>
+            <div class="login-body">
+                <form asp-controller="CustomerAccount" asp-action="Login" method="post">
+                    @Html.AntiForgeryToken()
+                    @if (!string.IsNullOrEmpty(Context.Request.Query["ReturnUrl"]))
+                    {
+                        <input type="hidden" name="returnUrl" value="@Context.Request.Query["ReturnUrl"]" />
+                    }
+                    
+                    <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
+                    
+                    <div class="mb-4">
+                        <label for="UserName" class="form-label">
+                            Kullanıcı Adı veya E-posta
+                        </label>
+                        <div class="input-group-icon">
+                            <i class="bi bi-person"></i>
+                            <input type="text" id="UserName" name="UserName" class="form-control" 
+                                   autocomplete="username" required value="@Model.UserName" 
+                                   placeholder="Kullanıcı adınızı girin" />
+                        </div>
+                        <span asp-validation-for="UserName" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="Password" class="form-label">
+                            Şifre
+                        </label>
+                        <div class="input-group-icon">
+                            <i class="bi bi-lock"></i>
+                            <input type="password" id="Password" name="Password" class="form-control" 
+                                   autocomplete="current-password" required 
+                                   placeholder="Şifrenizi girin" />
+                        </div>
+                        <span asp-validation-for="Password" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="RememberMe" name="RememberMe" value="true">
+                            <label class="form-check-label" for="RememberMe">
+                                Beni hatırla
+                            </label>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-login w-100">
+                        <i class="bi bi-box-arrow-in-right me-2"></i>Giriş Yap
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation/1.19.3/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
+</body>
+</html>
+

@@ -19,7 +19,21 @@ public class RequirePermissionAttribute : Attribute, IAuthorizationFilter
         var user = context.HttpContext.User;
         if (user?.Identity?.IsAuthenticated != true)
         {
-            context.Result = new RedirectToActionResult("Login", "Account", new { area = "Admin" });
+            var routeData = context.RouteData;
+            var area = routeData.Values["area"]?.ToString();
+            
+            if (area == "Customer")
+            {
+                context.Result = new RedirectToActionResult("Login", "Account", new { area = "Customer" });
+            }
+            else if (area == "Admin")
+            {
+                context.Result = new RedirectToActionResult("Login", "Account", new { area = "Admin" });
+            }
+            else
+            {
+                context.Result = new RedirectToActionResult("Login", "CustomerAccount", null);
+            }
             return;
         }
 
@@ -32,7 +46,21 @@ public class RequirePermissionAttribute : Attribute, IAuthorizationFilter
         var permissions = user.FindAll("Permission").Select(c => c.Value).ToList();
         if (!permissions.Contains(_permissionKey))
         {
-            context.Result = new RedirectToActionResult("AccessDenied", "Account", new { area = "Admin" });
+            var routeData = context.RouteData;
+            var area = routeData.Values["area"]?.ToString();
+            
+            if (area == "Customer")
+            {
+                context.Result = new RedirectToActionResult("AccessDenied", "Account", new { area = "Customer" });
+            }
+            else if (area == "Admin")
+            {
+                context.Result = new RedirectToActionResult("AccessDenied", "Account", new { area = "Admin" });
+            }
+            else
+            {
+                context.Result = new RedirectToActionResult("AccessDenied", "CustomerAccount", null);
+            }
         }
     }
 }

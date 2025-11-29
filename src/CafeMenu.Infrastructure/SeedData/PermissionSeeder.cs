@@ -31,7 +31,9 @@ public static class PermissionSeeder
             new Permission { Key = "Admin.Role.Create", DisplayName = "Rol Oluşturma", GroupName = "Rol Yönetimi", CreatedDate = DateTime.UtcNow, IsActive = true },
             new Permission { Key = "Admin.Role.Edit", DisplayName = "Rol Düzenleme", GroupName = "Rol Yönetimi", CreatedDate = DateTime.UtcNow, IsActive = true },
             new Permission { Key = "Admin.Role.Delete", DisplayName = "Rol Silme", GroupName = "Rol Yönetimi", CreatedDate = DateTime.UtcNow, IsActive = true },
-            new Permission { Key = "Admin.Role.ManagePermissions", DisplayName = "Rol İzinlerini Yönetme", GroupName = "Rol Yönetimi", CreatedDate = DateTime.UtcNow, IsActive = true }
+            new Permission { Key = "Admin.Role.ManagePermissions", DisplayName = "Rol İzinlerini Yönetme", GroupName = "Rol Yönetimi", CreatedDate = DateTime.UtcNow, IsActive = true },
+            new Permission { Key = "Customer.Home.View", DisplayName = "Müşteri Ana Sayfa Görüntüleme", GroupName = "Müşteri Paneli", CreatedDate = DateTime.UtcNow, IsActive = true },
+            new Permission { Key = "Customer.Menu.View", DisplayName = "Müşteri Menü Görüntüleme", GroupName = "Müşteri Paneli", CreatedDate = DateTime.UtcNow, IsActive = true }
         };
 
         foreach (var permission in permissions)

@@ -66,6 +66,19 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.Cookie.HttpOnly = true;
         options.Cookie.SecurePolicy = CookieSecurePolicy.None;
         options.Cookie.SameSite = SameSiteMode.Lax;
+        options.Cookie.Name = "AdminAuthCookie";
+    })
+    .AddCookie("CustomerCookie", options =>
+    {
+        options.LoginPath = "/CustomerAccount/Login";
+        options.LogoutPath = "/CustomerAccount/Logout";
+        options.AccessDeniedPath = "/CustomerAccount/AccessDenied";
+        options.ExpireTimeSpan = TimeSpan.FromHours(8);
+        options.SlidingExpiration = true;
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.None;
+        options.Cookie.SameSite = SameSiteMode.Lax;
+        options.Cookie.Name = "CustomerAuthCookie";
     });
 
 builder.Services.AddAuthorization();
@@ -78,7 +91,6 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-// İstersen ekle:
 app.UseHttpsRedirection();
 
 app.UseStaticFiles();
