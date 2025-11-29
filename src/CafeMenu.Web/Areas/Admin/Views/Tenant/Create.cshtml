@@ -1,16 +1,16 @@
 @model CafeMenu.Application.Models.ViewModels.TenantViewModel
 @{
-    ViewData["Title"] = "Yeni Tenant";
+    ViewData["Title"] = "Yeni İşletme";
     Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
 }
 
 <div class="page-header">
     <div>
-        <h1 class="page-title">Yeni Tenant</h1>
+        <h1 class="page-title">Yeni İşletme</h1>
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb breadcrumb-custom">
                 <li class="breadcrumb-item"><a href="/Admin/Dashboard">Admin</a></li>
-                <li class="breadcrumb-item"><a href="/Admin/Tenant">Tenantlar</a></li>
+                <li class="breadcrumb-item"><a href="/Admin/Tenant">İşletmeler</a></li>
                 <li class="breadcrumb-item active">Yeni</li>
             </ol>
         </nav>
@@ -23,14 +23,14 @@
         <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
 
         <div class="mb-4">
-            <label asp-for="Name" class="form-label"></label>
-            <input asp-for="Name" class="form-control" placeholder="Tenant adını girin" />
+            <label asp-for="Name" class="form-label">İşletme Adı</label>
+            <input asp-for="Name" class="form-control" placeholder="İşletme adını girin" />
             <span asp-validation-for="Name" class="text-danger"></span>
         </div>
 
         <div class="mb-4">
-            <label asp-for="Code" class="form-label"></label>
-            <input asp-for="Code" class="form-control" placeholder="TENANT_CODE" />
+            <label asp-for="Code" class="form-label">İşletme Kodu</label>
+            <input asp-for="Code" class="form-control" placeholder="İŞLETME_KODU" />
             <small class="text-muted">Büyük harf, rakam, tire ve alt çizgi kullanılabilir</small>
             <span asp-validation-for="Code" class="text-danger"></span>
         </div>
@@ -38,7 +38,7 @@
         <div class="mb-4">
             <div class="form-check">
                 <input asp-for="IsActive" class="form-check-input" type="checkbox" />
-                <label asp-for="IsActive" class="form-check-label">Aktif</label>
+                <label asp-for="IsActive" class="form-check-label">Aktif mi?</label>
             </div>
         </div>
 

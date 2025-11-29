@@ -24,14 +24,14 @@
         <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
 
         <div class="mb-4">
-            <label asp-for="Key" class="form-label"></label>
+            <label asp-for="Key" class="form-label">Özellik Anahtarı</label>
             <input asp-for="Key" class="form-control" placeholder="Özellik anahtarı (örn: Boyut, Şeker)" />
             <small class="text-muted">Özelliğin anahtar adı (örn: Boyut, Şeker, Süt)</small>
             <span asp-validation-for="Key" class="text-danger"></span>
         </div>
 
         <div class="mb-4">
-            <label asp-for="Value" class="form-label"></label>
+            <label asp-for="Value" class="form-label">Özellik Değeri</label>
             <input asp-for="Value" class="form-control" placeholder="Özellik değeri (örn: Büyük, Az, Tam Yağlı)" />
             <small class="text-muted">Özelliğin değeri (örn: Büyük, Az, Tam Yağlı)</small>
             <span asp-validation-for="Value" class="text-danger"></span>

@@ -20,7 +20,7 @@ public class UserViewModel
 
     [StringLength(200, ErrorMessage = "Şifre en fazla 200 karakter olabilir")]
     [MinLength(6, ErrorMessage = "Şifre en az 6 karakter olmalıdır")]
-    public string Password { get; set; } = string.Empty;
+    public string? Password { get; set; }
 
     [Required(ErrorMessage = "Tenant seçimi gereklidir")]
     public int TenantId { get; set; }

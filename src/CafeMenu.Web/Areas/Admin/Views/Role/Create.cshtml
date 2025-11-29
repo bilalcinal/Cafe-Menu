@@ -25,9 +25,9 @@
         @if (Model.AvailableTenants.Count > 1)
         {
             <div class="mb-4">
-                <label asp-for="TenantId" class="form-label"></label>
+                <label asp-for="TenantId" class="form-label">İşletme</label>
                 <select asp-for="TenantId" class="form-select" id="tenantSelect">
-                    <option value="">Tenant Seçin</option>
+                    <option value="">İşletme Seçiniz</option>
                     @foreach (var tenant in Model.AvailableTenants)
                     {
                         <option value="@tenant.TenantId">@tenant.Name</option>
@@ -42,7 +42,7 @@
         }
 
         <div class="mb-4">
-            <label asp-for="Name" class="form-label"></label>
+            <label asp-for="Name" class="form-label">Rol Adı</label>
             <input asp-for="Name" class="form-control" placeholder="Rol adını girin" />
             <span asp-validation-for="Name" class="text-danger"></span>
         </div>
@@ -50,7 +50,7 @@
         <div class="mb-4">
             <div class="form-check form-switch">
                 <input asp-for="IsActive" class="form-check-input" type="checkbox" />
-                <label asp-for="IsActive" class="form-check-label"></label>
+                <label asp-for="IsActive" class="form-check-label">Aktif mi?</label>
             </div>
         </div>
 

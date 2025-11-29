@@ -26,39 +26,39 @@
         <div class="row">
             <div class="col-md-6">
                 <div class="mb-4">
-                    <label asp-for="Name" class="form-label"></label>
-                    <input asp-for="Name" class="form-control" placeholder="Ad" />
+                    <label asp-for="Name" class="form-label">Ad</label>
+                    <input asp-for="Name" class="form-control" placeholder="Ad girin" />
                     <span asp-validation-for="Name" class="text-danger"></span>
                 </div>
             </div>
             <div class="col-md-6">
                 <div class="mb-4">
-                    <label asp-for="Surname" class="form-label"></label>
-                    <input asp-for="Surname" class="form-control" placeholder="Soyad" />
+                    <label asp-for="Surname" class="form-label">Soyad</label>
+                    <input asp-for="Surname" class="form-control" placeholder="Soyad girin" />
                     <span asp-validation-for="Surname" class="text-danger"></span>
                 </div>
             </div>
         </div>
 
         <div class="mb-4">
-            <label asp-for="UserName" class="form-label"></label>
-            <input asp-for="UserName" class="form-control" placeholder="Kullanıcı adı" />
+            <label asp-for="UserName" class="form-label">Kullanıcı Adı</label>
+            <input asp-for="UserName" class="form-control" placeholder="Kullanıcı adı girin" />
             <span asp-validation-for="UserName" class="text-danger"></span>
         </div>
 
         <div class="mb-4">
             <label asp-for="Password" class="form-label">Yeni Şifre (Opsiyonel)</label>
             <input asp-for="Password" class="form-control" type="password" placeholder="Değiştirmek istemiyorsanız boş bırakın" />
-            <small class="text-muted">Değiştirmek istemiyorsanız boş bırakın</small>
+            <small class="text-muted">Değiştirmek istemiyorsanız boş bırakın. Doldurursanız en az 6 karakter olmalıdır.</small>
             <span asp-validation-for="Password" class="text-danger"></span>
         </div>
 
         @if (Model.AvailableTenants.Count > 1)
         {
             <div class="mb-4">
-                <label asp-for="TenantId" class="form-label"></label>
+                <label asp-for="TenantId" class="form-label">İşletme</label>
                 <select asp-for="TenantId" class="form-select" id="tenantSelect" asp-items="@(new SelectList(Model.AvailableTenants, "TenantId", "Name"))">
-                    <option value="">Tenant Seçiniz</option>
+                    <option value="">İşletme Seçiniz</option>
                 </select>
                 <span asp-validation-for="TenantId" class="text-danger"></span>
             </div>
@@ -69,7 +69,7 @@
         }
 
         <div class="mb-4">
-            <label asp-for="RoleId" class="form-label"></label>
+            <label asp-for="RoleId" class="form-label">Rol</label>
             <select asp-for="RoleId" class="form-select" id="roleSelect">
                 <option value="">Rol Seçiniz</option>
                 @foreach (var role in Model.AvailableRoles)

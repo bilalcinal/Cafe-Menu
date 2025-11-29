@@ -14,15 +14,18 @@ public class CustomerController : Controller
     private readonly CustomerMenuService _customerMenuService;
     private readonly ITenantRepository _tenantRepository;
     private readonly ITenantResolver _tenantResolver;
+    private readonly IMenuPdfService _menuPdfService;
 
     public CustomerController(
         CustomerMenuService customerMenuService,
         ITenantRepository tenantRepository,
-        ITenantResolver tenantResolver)
+        ITenantResolver tenantResolver,
+        IMenuPdfService menuPdfService)
     {
         _customerMenuService = customerMenuService;
         _tenantRepository = tenantRepository;
         _tenantResolver = tenantResolver;
+        _menuPdfService = menuPdfService;
     }
 
     [RequirePermission("Customer.Menu.View")]
@@ -83,10 +86,17 @@ public class CustomerController : Controller
         var menuData = await _customerMenuService.GetCafeMenuAsync(cancellationToken);
         menuData.TenantName = tenant.Name;
 
-        var pdfService = HttpContext.RequestServices.GetRequiredService<IMenuPdfService>();
-        var pdfBytes = await pdfService.GenerateMenuPdfAsync(menuData, cancellationToken);
+        var pdfBytes = await _menuPdfService.GenerateMenuPdfAsync(menuData, cancellationToken);
 
-        var fileName = $"{tenant.Name}_Menu_{DateTime.Now:yyyyMMdd}.pdf";
+        var safeTenantName = System.Text.RegularExpressions.Regex.Replace(tenant.Name ?? "Menu", @"[^\w\s-]", "");
+        safeTenantName = System.Text.RegularExpressions.Regex.Replace(safeTenantName, @"\s+", "_");
+        if (string.IsNullOrWhiteSpace(safeTenantName))
+            safeTenantName = "Menu";
+        
+        var fileName = $"{safeTenantName}_Menu_{DateTime.Now:yyyyMMdd}.pdf";
+        var encodedFileName = Uri.EscapeDataString(fileName);
+        
+        Response.Headers.Append("Content-Disposition", $"attachment; filename=\"{fileName}\"; filename*=UTF-8''{encodedFileName}");
         return File(pdfBytes, "application/pdf", fileName);
     }
 }

@@ -25,12 +25,12 @@
         <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
 
         <div class="mb-4">
-            <label class="form-label">Tenant</label>
+            <label class="form-label">İşletme</label>
             <input type="text" class="form-control" value="@Model.TenantName" readonly />
         </div>
 
         <div class="mb-4">
-            <label asp-for="Name" class="form-label"></label>
+            <label asp-for="Name" class="form-label">Rol Adı</label>
             @if (Model.IsSystem)
             {
                 <input asp-for="Name" class="form-control" readonly />
@@ -52,7 +52,7 @@
                 {
                     <input asp-for="IsActive" class="form-check-input" type="checkbox" />
                 }
-                <label asp-for="IsActive" class="form-check-label"></label>
+                <label asp-for="IsActive" class="form-check-label">Aktif mi?</label>
             </div>
         </div>
 
