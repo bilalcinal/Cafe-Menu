@@ -6,5 +6,7 @@ public class CategoryDto
     public string CategoryName { get; set; } = string.Empty;
     public int? ParentCategoryId { get; set; }
     public string? ParentCategoryName { get; set; }
+    public List<CategoryDto> Children { get; set; } = new();
+    public bool IsParent => Children.Any();
 }
 

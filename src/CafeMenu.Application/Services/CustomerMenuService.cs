@@ -11,51 +11,83 @@ public class CustomerMenuService
     private readonly IProductCacheService _productCacheService;
     private readonly ICurrencyService _currencyService;
     private readonly ITenantResolver _tenantResolver;
+    private readonly CategoryService _categoryService;
 
     public CustomerMenuService(
         ICategoryRepository categoryRepository,
         IProductCacheService productCacheService,
         ICurrencyService currencyService,
-        ITenantResolver tenantResolver)
+        ITenantResolver tenantResolver,
+        CategoryService categoryService)
     {
         _categoryRepository = categoryRepository;
         _productCacheService = productCacheService;
         _currencyService = currencyService;
         _tenantResolver = tenantResolver;
+        _categoryService = categoryService;
     }
 
     public async Task<CustomerMenuViewModel> GetMenuAsync(int? categoryId, CancellationToken cancellationToken = default)
     {
         var tenantId = _tenantResolver.GetCurrentTenantId();
 
-        var categories = await _categoryRepository.GetAllForTenantAsync(tenantId, cancellationToken);
-        var categoryDtos = categories
-            .Where(c => !c.IsDeleted)
-            .Select(c => new CategoryDto
-            {
-                CategoryId = c.CategoryId,
-                CategoryName = c.CategoryName,
-                ParentCategoryId = c.ParentCategoryId,
-                ParentCategoryName = c.ParentCategory?.CategoryName
-            })
-            .ToList();
+        var categoryHierarchy = await _categoryService.GetCategoryHierarchyAsync(cancellationToken);
+        var allCategories = await _categoryService.GetAllAsync(cancellationToken);
 
         var allProducts = await _productCacheService.GetProductsForTenantAsync(tenantId, false, cancellationToken);
 
-        var products = categoryId.HasValue
-            ? allProducts.Where(p => p.CategoryId == categoryId.Value).ToList()
-            : allProducts.ToList();
+        List<ProductDto> products;
+        string? selectedCategoryName = null;
+
+        if (categoryId.HasValue)
+        {
+            var selectedCategory = allCategories.FirstOrDefault(c => c.CategoryId == categoryId.Value);
+            selectedCategoryName = selectedCategory?.CategoryName;
+
+            var selectedCategoryInHierarchy = categoryHierarchy
+                .SelectMany(GetAllDescendants)
+                .FirstOrDefault(c => c.CategoryId == categoryId.Value);
+
+            var hasChildren = selectedCategoryInHierarchy != null && selectedCategoryInHierarchy.Children.Any();
+
+            if (hasChildren)
+            {
+                var descendantIds = await _categoryService.GetDescendantCategoryIdsAsync(categoryId.Value, cancellationToken);
+                products = allProducts.Where(p => descendantIds.Contains(p.CategoryId)).ToList();
+            }
+            else
+            {
+                products = allProducts.Where(p => p.CategoryId == categoryId.Value).ToList();
+            }
+        }
+        else
+        {
+            products = allProducts.ToList();
+        }
 
         var currencyRates = await _currencyService.GetLatestRatesAsync(cancellationToken);
 
         return new CustomerMenuViewModel
         {
             TenantId = tenantId,
-            Categories = categoryDtos,
+            Categories = categoryHierarchy,
             SelectedCategoryId = categoryId,
+            SelectedCategoryName = selectedCategoryName,
             Products = products,
             CurrencyRates = currencyRates
         };
+    }
+
+    private IEnumerable<CategoryDto> GetAllDescendants(CategoryDto category)
+    {
+        yield return category;
+        foreach (var child in category.Children)
+        {
+            foreach (var descendant in GetAllDescendants(child))
+            {
+                yield return descendant;
+            }
+        }
     }
 }
 

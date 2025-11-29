@@ -91,5 +91,53 @@ public class CategoryService
         var tenantId = _tenantResolver.GetCurrentTenantId();
         await _categoryRepository.DeleteAsync(categoryId, tenantId, cancellationToken);
     }
+
+    public async Task<IReadOnlyList<CategoryDto>> GetCategoryHierarchyAsync(CancellationToken cancellationToken = default)
+    {
+        var allCategories = await GetAllAsync(cancellationToken);
+        var categoryDict = allCategories.ToDictionary(c => c.CategoryId, c => new CategoryDto
+        {
+            CategoryId = c.CategoryId,
+            CategoryName = c.CategoryName,
+            ParentCategoryId = c.ParentCategoryId,
+            ParentCategoryName = c.ParentCategoryName,
+            Children = new List<CategoryDto>()
+        });
+
+        var rootCategories = new List<CategoryDto>();
+
+        foreach (var category in categoryDict.Values)
+        {
+            if (category.ParentCategoryId.HasValue && categoryDict.ContainsKey(category.ParentCategoryId.Value))
+            {
+                categoryDict[category.ParentCategoryId.Value].Children.Add(category);
+            }
+            else
+            {
+                rootCategories.Add(category);
+            }
+        }
+
+        return rootCategories;
+    }
+
+    public async Task<List<int>> GetDescendantCategoryIdsAsync(int parentCategoryId, CancellationToken cancellationToken = default)
+    {
+        var allCategories = await GetAllAsync(cancellationToken);
+        var descendantIds = new List<int> { parentCategoryId };
+
+        void CollectChildren(int categoryId)
+        {
+            var children = allCategories.Where(c => c.ParentCategoryId == categoryId).ToList();
+            foreach (var child in children)
+            {
+                descendantIds.Add(child.CategoryId);
+                CollectChildren(child.CategoryId);
+            }
+        }
+
+        CollectChildren(parentCategoryId);
+        return descendantIds;
+    }
 }
 

@@ -102,13 +102,11 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// ADMIN AREA ROUTE
 app.MapAreaControllerRoute(
     name: "AdminArea",
     areaName: "Admin",
     pattern: "Admin/{controller=Dashboard}/{action=Index}/{id?}");
 
-// DEFAULT ROUTE (Customer tarafı)
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Customer}/{action=Index}/{id?}");

@@ -16,20 +16,58 @@
             </a>
             @foreach (var category in Model.Categories)
             {
-                <a asp-controller="Customer" asp-action="Index" asp-route-categoryId="@category.CategoryId"
-                   class="category-item @(Model.SelectedCategoryId == category.CategoryId ? "active" : "")">
-                    <i class="bi bi-tag me-2"></i>@category.CategoryName
-                </a>
+                var isSelected = Model.SelectedCategoryId == category.CategoryId;
+                var hasChildren = category.Children.Any();
+                var isParentSelected = category.Children.Any(c => c.CategoryId == Model.SelectedCategoryId || c.Children.Any(ch => ch.CategoryId == Model.SelectedCategoryId));
+
+                <div class="category-wrapper">
+                    <a asp-controller="Customer" asp-action="Index" asp-route-categoryId="@category.CategoryId"
+                       class="category-item @(isSelected ? "active" : "") @(hasChildren ? "category-parent" : "")">
+                        @if (hasChildren)
+                        {
+                            <i class="bi bi-folder-fill me-2"></i>
+                        }
+                        else
+                        {
+                            <i class="bi bi-tag me-2"></i>
+                        }
+                        <span class="fw-bold">@category.CategoryName</span>
+                    </a>
+                    @if (hasChildren)
+                    {
+                        <div class="category-children @(isSelected || isParentSelected ? "expanded" : "")">
+                            @foreach (var child in category.Children)
+                            {
+                                var isChildSelected = Model.SelectedCategoryId == child.CategoryId;
+                                <a asp-controller="Customer" asp-action="Index" asp-route-categoryId="@child.CategoryId"
+                                   class="category-item category-child @(isChildSelected ? "active" : "")">
+                                    <i class="bi bi-arrow-return-right me-2"></i>@child.CategoryName
+                                </a>
+                                @if (child.Children.Any())
+                                {
+                                    foreach (var grandChild in child.Children)
+                                    {
+                                        var isGrandChildSelected = Model.SelectedCategoryId == grandChild.CategoryId;
+                                        <a asp-controller="Customer" asp-action="Index" asp-route-categoryId="@grandChild.CategoryId"
+                                           class="category-item category-child category-grandchild @(isGrandChildSelected ? "active" : "")">
+                                            <i class="bi bi-arrow-return-right me-2"></i><i class="bi bi-arrow-return-right me-1"></i>@grandChild.CategoryName
+                                        </a>
+                                    }
+                                }
+                            }
+                        </div>
+                    }
+                </div>
             }
         </div>
     </div>
 
     <div class="col-lg-9 col-md-8">
-        @if (Model.SelectedCategoryId.HasValue)
+        @if (Model.SelectedCategoryId.HasValue && !string.IsNullOrEmpty(Model.SelectedCategoryName))
         {
             <div class="mb-4">
                 <h3 class="fw-bold">
-                    @Model.Categories.FirstOrDefault(c => c.CategoryId == Model.SelectedCategoryId)?.CategoryName
+                    <i class="bi bi-funnel me-2"></i>Filtre: @Model.SelectedCategoryName
                 </h3>
                 <p class="text-muted">@Model.Products.Count ürün bulundu</p>
             </div>
@@ -101,7 +139,56 @@
                 </div>
                 <h4>Ürün bulunamadı</h4>
                 <p class="text-muted">Bu kategoride henüz ürün bulunmamaktadır.</p>
+                <a asp-controller="Customer" asp-action="Index" class="btn btn-customer mt-3">
+                    <i class="bi bi-arrow-left me-2"></i>Tüm Ürünleri Görüntüle
+                </a>
             </div>
         }
     </div>
 </div>
+
+
+@section Styles {
+    <style>
+        .category-wrapper {
+            margin-bottom: 0.25rem;
+        }
+
+        .category-parent {
+            font-weight: 600;
+        }
+
+        .category-children {
+            margin-left: 1.5rem;
+            margin-top: 0.25rem;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .category-children.expanded {
+            max-height: 1000px;
+        }
+
+        .category-child {
+            font-size: 0.9rem;
+            padding-left: 1rem;
+        }
+
+        .category-grandchild {
+            margin-left: 1rem;
+            font-size: 0.85rem;
+        }
+
+        .category-item.active {
+            background-color: var(--customer-primary) !important;
+            border-color: var(--customer-primary) !important;
+            color: white !important;
+        }
+
+        .category-item:hover:not(.active) {
+            background-color: var(--customer-bg);
+            color: var(--customer-primary);
+        }
+    </style>
+}
