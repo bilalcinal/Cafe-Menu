@@ -78,12 +78,13 @@ Proje **Clean Architecture** prensiplerine göre 4 ana katmandan oluşmaktadır:
 - External service implementasyonları (CurrencyService, ProductCacheService, MenuPdfService)
 - Tenant resolver implementasyonu
 - Stored procedure çağrıları (user authentication)
+- **IoC/ServiceRegistration**: Dependency Injection kayıtları (Clean Architecture prensiplerine uygun)
 - Application ve Domain katmanlarına bağımlıdır
 
 ### 🌐 CafeMenu.Web
 - ASP.NET Core MVC controllers
 - Razor views
-- Dependency injection configuration
+- Application entry point (Program.cs)
 - Application ve Infrastructure katmanlarına bağımlıdır
 
 ---
@@ -146,17 +147,27 @@ docker run -e "ACCEPT_EULA=Y" \
 
 #### Adım 3: Connection String'i Yapılandırın
 
-`src/CafeMenu.Web/appsettings.json` dosyasını açın ve connection string'i düzenleyin:
+Connection string artık **environment variable** olarak yapılandırılmıştır. Bu, güvenlik ve production ortamı için best practice'dir.
+
+**Development Ortamı için:**
+
+`src/CafeMenu.Web/Properties/launchSettings.json` dosyasını açın ve connection string'i düzenleyin:
 
 ```json
 {
-  "ConnectionStrings": {
-    "DefaultConnection": "Server=localhost,1433;Database=CafeMenuDb;User Id=sa;Password=Strong!Pass2025;TrustServerCertificate=True;"
+  "profiles": {
+    "http": {
+      "environmentVariables": {
+        "ConnectionStrings__DefaultConnection": "Server=localhost,1433;Database=CafeMenuDb;User Id=sa;Password=Strong!Pass2025;TrustServerCertificate=True;"
+      }
+    }
   }
 }
 ```
 
 > 💡 **İpucu**: Eğer farklı bir SQL Server kullanıyorsanız, connection string'i buna göre güncelleyin.
+
+> 🔒 **Güvenlik**: Production ortamında connection string'i environment variable olarak ayarlayın. `appsettings.json` dosyasında connection string **bulunmamalıdır**.
 
 #### Adım 4: Stored Procedure'ları Oluşturun
 
@@ -291,6 +302,8 @@ Cafe-Menu/
 │   │   └── Services/                 # Application services
 │   │
 │   ├── CafeMenu.Infrastructure/      # Infrastructure Layer
+│   │   ├── IoC/                      # Dependency Injection configuration
+│   │   │   └── ServiceRegistration.cs # Tüm DI kayıtları
 │   │   ├── Migrations/               # EF Core migrations
 │   │   ├── Persistence/              # DbContext ve configurations
 │   │   ├── Repositories/             # Repository implementations
@@ -302,9 +315,11 @@ Cafe-Menu/
 │       ├── Areas/
 │       │   └── Admin/                 # Admin area (controllers, views)
 │       ├── Controllers/               # MVC controllers
+│       ├── Properties/
+│       │   └── launchSettings.json    # Environment variables (connection string)
 │       ├── Views/                     # Razor views
 │       ├── wwwroot/                   # Static files (CSS, JS, images)
-│       └── Program.cs                 # Application entry point
+│       └── Program.cs                 # Application entry point (sadeleştirilmiş)
 │
 ├── docker-compose.yml                 # Docker Compose configuration
 ├── Dockerfile                         # Docker image definition
@@ -315,11 +330,21 @@ Cafe-Menu/
 
 ## 🔑 Önemli Özellikler
 
+### 🏗️ Clean Architecture & IoC
+
+Proje **Clean Architecture** prensiplerine tam uyumludur:
+
+- **Dependency Injection**: Tüm DI kayıtları `CafeMenu.Infrastructure.IoC.ServiceRegistration` sınıfında merkezi olarak yönetilir
+- **Separation of Concerns**: Her katman kendi sorumluluğuna odaklanır
+- **Dependency Inversion**: Üst katmanlar alt katmanlara değil, interface'lere bağımlıdır
+- **Environment-Based Configuration**: Connection string ve hassas bilgiler environment variable'lar üzerinden yönetilir
+
 ### 🔐 Güvenlik
 
 - **Hash + Salt**: Kullanıcı şifreleri SQL Server stored procedure'ları ile SHA2-256 hash ve random salt kullanılarak saklanır
 - **Cookie Authentication**: Güvenli cookie tabanlı kimlik doğrulama
 - **Permission-Based Authorization**: Detaylı izin sistemi ile yetkilendirme
+- **Connection String Security**: Connection string'ler kod içinde değil, environment variable'lar üzerinden yönetilir
 
 ### 🏢 Multi-Tenancy
 

@@ -1,27 +1,18 @@
-using CafeMenu.Application.Interfaces.Repositories;
-using CafeMenu.Application.Interfaces.Services;
-using CafeMenu.Application.Services;
+using CafeMenu.Infrastructure.IoC;
 using CafeMenu.Infrastructure.Persistence;
-using CafeMenu.Infrastructure.Repositories;
 using CafeMenu.Infrastructure.SeedData;
-using CafeMenu.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Memory;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? "Server=localhost,1433;Database=CafeMenuDb;User Id=sa;Password=Strong!Pass2025;TrustServerCertificate=True;";
+    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
 builder.Services.AddDbContext<CafeMenuDbContext>(options =>
     options.UseSqlServer(connectionString, b => b.MigrationsAssembly("CafeMenu.Infrastructure")));
-
-builder.Services.AddMemoryCache();
-
-builder.Services.AddHttpClient();
 
 builder.Services.AddSession(options =>
 {
@@ -30,34 +21,7 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
-builder.Services.AddHttpClient<ICurrencyService, CurrencyService>();
-
-builder.Services.AddScoped<ICategoryRepository, EfCategoryRepository>();
-builder.Services.AddScoped<IProductRepository, EfProductRepository>();
-builder.Services.AddScoped<IPropertyRepository, EfPropertyRepository>();
-builder.Services.AddScoped<IProductPropertyRepository, EfProductPropertyRepository>();
-builder.Services.AddScoped<IUserRepository, EfUserRepository>();
-builder.Services.AddScoped<ITenantRepository, EfTenantRepository>();
-builder.Services.AddScoped<IRoleRepository, EfRoleRepository>();
-builder.Services.AddScoped<IPermissionRepository, EfPermissionRepository>();
-builder.Services.AddScoped<IRolePermissionRepository, EfRolePermissionRepository>();
-
-builder.Services.AddScoped<IProductCacheService, ProductCacheService>();
-builder.Services.AddScoped<ITenantResolver, TenantResolver>();
-builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IPermissionService, PermissionService>();
-builder.Services.AddScoped<IMenuPdfService, MenuPdfService>();
-
-builder.Services.AddScoped<CustomerMenuService>();
-builder.Services.AddScoped<CategoryService>();
-builder.Services.AddScoped<ProductService>();
-builder.Services.AddScoped<PropertyService>();
-builder.Services.AddScoped<DashboardService>();
-builder.Services.AddScoped<TenantService>();
-builder.Services.AddScoped<UserManagementService>();
-builder.Services.AddScoped<RoleManagementService>();
-
-builder.Services.AddHttpContextAccessor();
+builder.Services.AddInfrastructure(builder.Configuration);
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
